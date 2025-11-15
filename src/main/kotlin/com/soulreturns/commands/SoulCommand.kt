@@ -1,6 +1,7 @@
 package com.soulreturns.command
 
 import com.mojang.brigadier.context.CommandContext
+import com.soulreturns.Soul
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
@@ -23,9 +24,9 @@ object SoulCommand {
         context.source.player.sendMessage(Text.literal("Opening Soul config..."), false)
 
         MinecraftClient.getInstance().send {
-//            val editor = SoulClient.config.getEditor()
-//            editor.setWide(false)
-//            SoulClient.config.openConfigGui()
+            val editor = Soul.config.getEditor()
+            editor.setWide(false)
+            Soul.config.openConfigGui()
         }
 
         return 1 // Success

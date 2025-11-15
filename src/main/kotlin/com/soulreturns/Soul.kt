@@ -2,12 +2,18 @@ package com.soulreturns
 
 import com.soulreturns.command.SoulCommand
 import com.soulreturns.config.ConfigManager
+import com.soulreturns.config.MainConfig
+import io.github.notenoughupdates.moulconfig.managed.ManagedConfig
 import net.fabricmc.api.ClientModInitializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.File
 
 object Soul : ClientModInitializer {
     private val logger = LoggerFactory.getLogger("soul")
+    lateinit var config: ManagedConfig<MainConfig>
+    lateinit var configManager: ConfigManager
+
 
 	override fun onInitializeClient() {
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
@@ -16,7 +22,7 @@ object Soul : ClientModInitializer {
 		logger.info("Hello Fabric world!")
 
         // Access config to trigger initialization
-//        ConfigManager.config
+        configManager = ConfigManager()
 
         SoulCommand.register()
 	}
