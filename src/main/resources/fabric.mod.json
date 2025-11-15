@@ -15,7 +15,7 @@
 	"icon": "assets/soul/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"main": [
+		"client": [
 			{
 				"value": "com.soulreturns.Soul",
 				"adapter": "kotlin"
