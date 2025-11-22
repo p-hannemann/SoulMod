@@ -1,6 +1,7 @@
 package com.soulreturns
 
 import com.soulreturns.command.SoulCommand
+import com.soulreturns.command.TestDoubleHookCommand
 import com.soulreturns.config.ConfigManager
 import com.soulreturns.features.ReplaceLava
 import com.soulreturns.features.DoubleHookResponse
@@ -23,6 +24,7 @@ object Soul : ClientModInitializer {
         configManager = ConfigManager()
 
         SoulCommand.register()
+        TestDoubleHookCommand.register()
         DoubleHookResponse.register()
     }
 

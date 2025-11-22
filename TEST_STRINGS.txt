@@ -1,0 +1,95 @@
+=================================================================
+DOUBLE HOOK DETECTION TEST STRINGS
+=================================================================
+
+Use the command `/testdh` in-game to automatically test all cases.
+Use `/testdh <number>` to test a specific case.
+
+Alternatively, you can manually paste these into chat (in a singleplayer
+world, press 'T' and paste each line):
+
+-----------------------------------------------------------------
+SERVER MESSAGES (SHOULD TRIGGER - Send /pc Woot Woot!)
+-----------------------------------------------------------------
+
+1. It's a Double Hook! Woot woot!
+
+2. §6§lDOUBLE HOOK! §eYou got lucky!
+
+3. ⚡ Double Hook! ⚡
+
+4. [EVENT] Double Hook! Special catch!
+
+
+-----------------------------------------------------------------
+PLAYER MESSAGES - PARTY CHAT (SHOULD NOT TRIGGER)
+-----------------------------------------------------------------
+
+5. §9Party §8> §6[MVP§3++§6] SoulReturns§f: Double Hook!
+
+6. Party > [MVP++] TestPlayer: Double Hook!
+
+7. Party > SoulReturns: Double Hook!
+
+
+-----------------------------------------------------------------
+PLAYER MESSAGES - PUBLIC CHAT (SHOULD NOT TRIGGER)
+-----------------------------------------------------------------
+
+8. [505] ⚜ [MVP++] SoulReturns: Double Hook!
+
+9. [VIP+] PlayerName: Double Hook!
+
+10. [MVP+] AnotherPlayer: Double Hook! Woot Woot!
+
+
+-----------------------------------------------------------------
+PLAYER MESSAGES - GUILD/OFFICER CHAT (SHOULD NOT TRIGGER)
+-----------------------------------------------------------------
+
+11. Guild > [MVP++] GuildMember: Double Hook!
+
+12. Officer > [MVP++] OfficerName: Double Hook!
+
+
+-----------------------------------------------------------------
+EDGE CASES
+-----------------------------------------------------------------
+
+13. SomePlayer: Double Hook!
+    (Player without rank - SHOULD NOT TRIGGER)
+
+14. [MOD] ModPlayer: Double Hook!
+    (MOD rank - SHOULD NOT TRIGGER)
+
+15. [ADMIN] AdminPlayer: Double Hook!
+    (ADMIN rank - SHOULD NOT TRIGGER)
+
+16. You caught a fish!
+    (No "Double Hook!" text - SHOULD NOT TRIGGER)
+
+
+=================================================================
+EXPECTED BEHAVIOR
+=================================================================
+
+✓ Cases 1-4: Should send "/pc Woot Woot!" to party chat
+✗ Cases 5-16: Should be ignored (no command sent)
+
+You should see in the logs:
+- For ignored messages: "[SOUL] Ignoring player message: ..."
+- For triggered messages: "[SOUL] Detected 'Double Hook!' in server message, sending party cheer"
+
+=================================================================
+IN-GAME TESTING COMMANDS
+=================================================================
+
+/testdh              - Run all test cases automatically
+/testdh 1            - Test case #1 only
+/testdh 8            - Test case #8 only
+... etc
+
+Make sure "Woot Woot!" feature is enabled in config (/soul command)
+
+=================================================================
+
