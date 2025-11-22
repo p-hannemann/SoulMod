@@ -23,7 +23,7 @@ object DoubleHookResponse {
     private fun handleMessage(raw: String) {
         try {
             // Feature toggle
-            if (!Soul.configManager.config.instance.ChatCategory.wootWoot) return
+            if (!Soul.configManager.config.instance.ChatCategory.doubleHookMessage.doubleHookMessageToggle) return
 
             val player = MinecraftClient.getInstance().player ?: return
 
@@ -39,7 +39,7 @@ object DoubleHookResponse {
 
             if (trimmed.contains("Double Hook!", ignoreCase = true)) {
                 Soul.getLogger()?.info("Detected 'Double Hook!' in server message, sending party cheer")
-                player.networkHandler.sendChatCommand("pc Woot Woot!")
+                player.networkHandler.sendChatCommand("pc " + Soul.configManager.config.instance.ChatCategory.doubleHookMessage.doubleHookMessageText)
             }
         } catch (t: Throwable) {
             Soul.getLogger()?.error("Error handling chat message for DoubleHookResponse", t)
