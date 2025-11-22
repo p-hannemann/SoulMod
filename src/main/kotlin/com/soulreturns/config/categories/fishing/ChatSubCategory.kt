@@ -24,6 +24,6 @@ class ChatSubCategory {
         @JvmField
         @ConfigOption(name = "Double Hook Message", desc = "Message to send when 'Double Hook!' is detected in chat")
         @ConfigEditorText
-        var doubleHookMessageText: String = "Woot Woot!"
+        var doubleHookMessageText: String = "[Soul] Woot Woot!"
     }
 }

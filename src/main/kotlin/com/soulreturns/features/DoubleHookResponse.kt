@@ -1,6 +1,8 @@
 package com.soulreturns.features
 
 import com.soulreturns.Soul
+import com.soulreturns.config.ConfigInstance
+import com.soulreturns.config.config
 import com.soulreturns.util.MessageDetector
 import com.soulreturns.util.MessageHandler
 import net.minecraft.client.MinecraftClient
@@ -16,15 +18,15 @@ object DoubleHookResponse {
 
     private fun handleServerMessage(message: String) {
         try {
-            // Feature toggle
-            if (!Soul.configManager.config.instance.FishingCategory.ChatSubCategory.doubleHookMessage.doubleHookMessageToggle) return
+            // Feature toggle via direct instance chain
+            if (!config.FishingCategory.ChatSubCategory.doubleHookMessage.doubleHookMessageToggle) return
 
             val player = MinecraftClient.getInstance().player ?: return
 
             // Check for Double Hook message
             if (MessageDetector.containsPattern(message, "Double Hook!")) {
                 Soul.getLogger()?.info("Detected 'Double Hook!' in server message, sending party cheer")
-                player.networkHandler.sendChatCommand("pc " + Soul.configManager.config.instance.FishingCategory.ChatSubCategory.doubleHookMessage.doubleHookMessageText)
+                player.networkHandler.sendChatCommand("pc " + config.FishingCategory.ChatSubCategory.doubleHookMessage.doubleHookMessageText)
             }
         } catch (t: Throwable) {
             Soul.getLogger()?.error("Error handling chat message for DoubleHookResponse", t)
