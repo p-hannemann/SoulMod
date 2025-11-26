@@ -2,6 +2,8 @@ package com.soulreturns.util
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.sound.SoundEvent
+import net.minecraft.sound.SoundEvents
 import net.minecraft.text.Text
 
 object RenderUtils {
@@ -28,7 +30,7 @@ object RenderUtils {
             Long.MAX_VALUE
         }
         alertMessages.add(AlertMessage(text, color, textScale, expiryTime))
-
+        MinecraftClient.getInstance().player?.playSound(SoundEvents.ENTITY_MULE_EAT, 1.0f, 1.0f)
     }
 
     fun clearAlerts() {

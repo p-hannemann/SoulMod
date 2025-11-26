@@ -4,6 +4,7 @@ import com.google.gson.annotations.Expose
 import com.soulreturns.Soul
 import com.soulreturns.config.categories.RenderCategory
 import com.soulreturns.config.categories.FishingCategory
+import com.soulreturns.config.categories.MiningCategory
 import io.github.notenoughupdates.moulconfig.Config
 import io.github.notenoughupdates.moulconfig.annotations.Category
 import io.github.notenoughupdates.moulconfig.common.text.StructuredText
@@ -16,10 +17,15 @@ class MainConfig : Config() {
     @JvmField
     @Expose
     @Category(name = "Render", desc = "Render features")
-    var RenderCategory = RenderCategory()
+    var renderCategory = RenderCategory()
 
     @JvmField
     @Expose
     @Category(name = "Fishing", desc = "Fishing features")
-    var FishingCategory = FishingCategory()
+    var fishingCategory = FishingCategory()
+
+    @JvmField
+    @Expose
+    @Category(name = "Mining", desc = "Mining features")
+    var miningCategory = MiningCategory()
 }

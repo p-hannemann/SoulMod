@@ -26,7 +26,7 @@ object SoulCommand {
             dispatcher.register(
                 ClientCommandManager.literal("test")
                     .executes { context ->
-                        val test = Soul.configManager.config.instance.RenderCategory.hideHeldItemTooltip
+                        val test = Soul.configManager.config.instance.renderCategory.hideHeldItemTooltip
                         IMinecraft.getInstance().sendChatMessage(StructuredText.of("Setting: $test"))
                         0
                     }

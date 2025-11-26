@@ -19,7 +19,7 @@ public class InGameHudMixin {
             cancellable = true
     )
     public void renderHeldItemTooltip(DrawContext context, CallbackInfo ci) {
-        if (getConfig().RenderCategory.hideHeldItemTooltip) {
+        if (getConfig().renderCategory.hideHeldItemTooltip) {
             ci.cancel();
         }
     }

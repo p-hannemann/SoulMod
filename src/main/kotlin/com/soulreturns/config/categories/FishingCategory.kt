@@ -8,5 +8,5 @@ class FishingCategory {
     @Expose
     @JvmField
     @Category(name = "Chat", desc = "Chat features")
-    var ChatSubCategory = ChatSubCategory()
+    var chatSubCategory = ChatSubCategory()
 }
