@@ -1,7 +1,6 @@
 package com.soulreturns
 
 import com.soulreturns.command.SoulCommand
-import com.soulreturns.command.TestDoubleHookCommand
 import com.soulreturns.commands.TestAlertCommand
 import com.soulreturns.config.ConfigManager
 import com.soulreturns.features.DoubleHookResponse
@@ -39,7 +38,6 @@ object Soul : ClientModInitializer {
 
     fun registerCommands() {
         SoulCommand.register()
-        TestDoubleHookCommand.register()
         TestAlertCommand.register()
     }
 

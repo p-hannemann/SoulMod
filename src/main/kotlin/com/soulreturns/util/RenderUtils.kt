@@ -2,7 +2,6 @@ package com.soulreturns.util
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.sound.SoundEvent
 import net.minecraft.sound.SoundEvents
 import net.minecraft.text.Text
 
@@ -30,7 +29,26 @@ object RenderUtils {
             Long.MAX_VALUE
         }
         alertMessages.add(AlertMessage(text, color, textScale, expiryTime))
-        MinecraftClient.getInstance().player?.playSound(SoundEvents.ENTITY_MULE_EAT, 1.0f, 1.0f)
+
+        val client = MinecraftClient.getInstance()
+        val player = client.player
+
+        Thread {
+            player?.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), 5.0f, 0.5f)
+
+            Thread.sleep(150)
+            client.execute {
+                player?.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), 5.0f, 0.7f)
+            }
+            Thread.sleep(150)
+            client.execute {
+                player?.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), 5.0f, 0.9f)
+            }
+            Thread.sleep(150)
+            client.execute {
+                player?.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), 5.0f, 1.1f)
+            }
+        }.start()
     }
 
     fun clearAlerts() {

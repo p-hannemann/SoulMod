@@ -19,7 +19,6 @@ object MessageHandler {
      */
     fun register() {
         if (isRegistered) {
-            Soul.getLogger()?.warn("MessageHandler already registered, skipping duplicate registration")
             return
         }
 
@@ -35,7 +34,6 @@ object MessageHandler {
         }
 
         isRegistered = true
-        Soul.getLogger()?.info("MessageHandler listeners registered")
     }
 
     /**
@@ -46,7 +44,6 @@ object MessageHandler {
      */
     fun onServerMessage(handler: (String) -> Unit) {
         serverMessageHandlers.add(handler)
-        Soul.getLogger()?.debug("Registered server message handler (total: ${serverMessageHandlers.size})")
     }
 
     /**
@@ -57,7 +54,6 @@ object MessageHandler {
      */
     fun onPlayerMessage(handler: (String) -> Unit) {
         playerMessageHandlers.add(handler)
-        Soul.getLogger()?.debug("Registered player message handler (total: ${playerMessageHandlers.size})")
     }
 
     /**
@@ -67,6 +63,16 @@ object MessageHandler {
         serverMessageHandlers.clear()
         playerMessageHandlers.clear()
         Soul.getLogger()?.debug("Cleared all message handlers")
+    }
+
+    /**
+     * Simulate receiving a message for testing purposes.
+     * This bypasses the event system and directly processes the message.
+     *
+     * @param message The message to process
+     */
+    fun simulateMessage(message: String) {
+        handleMessage(message)
     }
 
     private fun handleMessage(raw: String) {
@@ -79,7 +85,6 @@ object MessageHandler {
 
             // Determine message type and notify appropriate handlers
             if (MessageDetector.isPlayerMessage(trimmed)) {
-                Soul.getLogger()?.debug("Player message detected: $trimmed")
                 playerMessageHandlers.forEach { handler ->
                     try {
                         handler(trimmed)
@@ -88,7 +93,6 @@ object MessageHandler {
                     }
                 }
             } else {
-                Soul.getLogger()?.debug("Server message detected: $trimmed")
                 serverMessageHandlers.forEach { handler ->
                     try {
                         handler(trimmed)

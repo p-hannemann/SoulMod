@@ -2,6 +2,7 @@ package com.soulreturns.command
 
 import com.mojang.brigadier.context.CommandContext
 import com.soulreturns.Soul
+import com.soulreturns.commands.subcommands.TestMessageSubcommand
 import com.soulreturns.config.ConfigGuiCloser
 import io.github.notenoughupdates.moulconfig.common.IMinecraft
 import io.github.notenoughupdates.moulconfig.common.text.StructuredText
@@ -19,6 +20,7 @@ object SoulCommand {
                     .executes { context ->
                         execute(context)
                     }
+                    .then(TestMessageSubcommand.register())
             )
         }
 
