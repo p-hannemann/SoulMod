@@ -1,5 +1,3 @@
-import org.gradle.language.jvm.tasks.ProcessResources
-
 plugins {
 	id("fabric-loom") version "1.13-SNAPSHOT"
     `maven-publish`
@@ -7,19 +5,25 @@ plugins {
     id("com.gradleup.shadow") version "8.3.5"
 }
 
-version = project.property("mod_version") as String
-group = project.property("maven_group") as String
+version = "${property("mod.version")}+${stonecutter.current.version}"
+base.archivesName = property("archives_base_name") as String
 
-base {
-	archivesName = project.property("archives_base_name") as String
+val requiredJava = when {
+    stonecutter.eval(stonecutter.current.version, ">=1.21.0") -> JavaVersion.VERSION_21
+    else -> JavaVersion.VERSION_1_8
 }
 
 repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
+    /**
+     * Restricts dependency search of the given [groups] to the [maven URL][url],
+     * improving the setup speed.
+     */
+    fun strictMaven(url: String, alias: String, vararg groups: String) = exclusiveContent {
+        forRepository { maven(url) { name = alias } }
+        filter { groups.forEach(::includeGroup) }
+    }
+    strictMaven("https://www.cursemaven.com", "CurseForge", "curse.maven")
+    strictMaven("https://api.modrinth.com/maven", "Modrinth", "maven.modrinth")
 
     maven("https://maven.notenoughupdates.org/releases/")
 }
@@ -29,18 +33,27 @@ val shadowModImpl by configurations.creating {
 }
 
 dependencies {
-	// To change the versions see the gradle.properties file
-	minecraft("com.mojang:minecraft:${project.property("minecraft_version")}")
-	mappings("net.fabricmc:yarn:${project.property("yarn_mappings")}:v2")
-	modImplementation("net.fabricmc:fabric-loader:${project.property("loader_version")}")
+    // Extra fabric api modules
+//    val apiModules = setOf(
+//        "fabric-rendering-v1"
+//    )
 
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
+    minecraft("com.mojang:minecraft:${stonecutter.current.version}")
+
+	mappings("net.fabricmc:yarn:${project.property("yarn_mappings")}:v2")
+    modImplementation("net.fabricmc:fabric-loader:${property("deps.fabric_loader")}")
+
+//    apiModules.forEach {
+//        modImplementation(fabricApi.module(it, property("deps.fabric_api") as String))
+//    }
+
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${project.property("deps.fabric_api")}")
+
 	modImplementation("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
 
     // MoulConfig
-    "shadowModImpl"("org.notenoughupdates.moulconfig:modern-1.21.7:4.2.0-beta")
-    include("org.notenoughupdates.moulconfig:modern-1.21.7:4.2.0-beta")
+    "shadowModImpl"("org.notenoughupdates.moulconfig:${project.property("moulconfig_version")}")
+    include("org.notenoughupdates.moulconfig:${project.property("moulconfig_version")}")
 }
 
 tasks.shadowJar {
@@ -49,23 +62,19 @@ tasks.shadowJar {
     relocate("io.github.notenoughupdates.moulconfig", "com.soulreturns.deps.moulconfig")
 }
 
-tasks.named<ProcessResources>("processResources") {
-    // Capture values at configuration time (OK for config cache)
-    val modVersion = project.version.toString()
-    val modGroup = project.group.toString()
+loom {
+    fabricModJsonPath = rootProject.file("src/main/resources/fabric.mod.json") // Useful for interface injection
+    accessWidenerPath = rootProject.file("src/main/resources/soul.accesswidener")
 
-    filesMatching("fabric.mod.json") {
-        expand(
-            mapOf(
-                "version" to modVersion,
-                "group" to modGroup
-            )
-        )
+    decompilerOptions.named("vineflower") {
+        options.put("mark-corresponding-synthetics", "1") // Adds names to lambdas - useful for mixins
     }
-}
 
-tasks.withType(JavaCompile::class).configureEach {
-	options.release = 21
+    runConfigs.all {
+        ideConfigGenerated(true)
+        vmArgs("-Dmixin.debug.export=true") // Exports transformed classes for debugging
+        runDir = "../../run" // Shares the run directory between versions
+    }
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class).all {
@@ -75,35 +84,38 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class).all {
 }
 
 java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
-
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+    withSourcesJar()
+    targetCompatibility = requiredJava
+    sourceCompatibility = requiredJava
 }
 
-tasks.jar {
-	from("LICENSE") {
-		rename { "${it}_${base.archivesName.get()}"}
-	}
-}
 
-// configure the maven publication
-publishing {
-	publications {
-		create<MavenPublication>("mavenJava") {
-			artifactId = project.property("archives_base_name") as String
-			from(components["java"])
-		}
-	}
 
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
-	}
+tasks {
+    processResources {
+        inputs.property("id", project.property("mod.id"))
+        inputs.property("name", project.property("mod.name"))
+        inputs.property("version", project.property("mod.version"))
+        inputs.property("minecraft", project.property("mod.mc_dep"))
+
+        val props = mapOf(
+            "id" to project.property("mod.id"),
+            "name" to project.property("mod.name"),
+            "version" to project.property("mod.version"),
+            "minecraft" to project.property("mod.mc_dep")
+        )
+
+        filesMatching("fabric.mod.json") { expand(props) }
+
+        val mixinJava = "JAVA_${requiredJava.majorVersion}"
+        filesMatching("*.mixins.json") { expand("java" to mixinJava) }
+    }
+
+    // Builds the version into a shared folder in `build/libs/${mod version}/`
+    register<Copy>("buildAndCollect") {
+        group = "build"
+        from(remapJar.map { it.archiveFile }, remapSourcesJar.map { it.archiveFile })
+        into(rootProject.layout.buildDirectory.file("libs/${project.property("mod.version")}"))
+        dependsOn("build")
+    }
 }
