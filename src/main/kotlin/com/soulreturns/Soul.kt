@@ -2,6 +2,7 @@ package com.soulreturns
 
 import com.soulreturns.command.SoulCommand
 import com.soulreturns.command.TestDoubleHookCommand
+import com.soulreturns.commands.TestAlertCommand
 import com.soulreturns.config.ConfigManager
 import com.soulreturns.features.DoubleHookResponse
 import com.soulreturns.util.MessageHandler
@@ -39,10 +40,12 @@ object Soul : ClientModInitializer {
     fun registerCommands() {
         SoulCommand.register()
         TestDoubleHookCommand.register()
+        TestAlertCommand.register()
     }
 
     fun registerFeatures() {
         DoubleHookResponse.register()
+        com.soulreturns.features.mining.dwarvenMines.DonExpresso.register()
     }
 
     fun reloadFeatures() {

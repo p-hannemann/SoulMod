@@ -25,6 +25,7 @@ repositories {
     strictMaven("https://www.cursemaven.com", "CurseForge", "curse.maven")
     strictMaven("https://api.modrinth.com/maven", "Modrinth", "maven.modrinth")
 
+    maven ("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
     maven("https://maven.notenoughupdates.org/releases/")
 }
 
@@ -54,6 +55,8 @@ dependencies {
     // MoulConfig
     "shadowModImpl"("org.notenoughupdates.moulconfig:${project.property("moulconfig_version")}")
     include("org.notenoughupdates.moulconfig:${project.property("moulconfig_version")}")
+
+    modRuntimeOnly("me.djtheredstoner:${project.property("deps.devauth")}")
 }
 
 tasks.shadowJar {
