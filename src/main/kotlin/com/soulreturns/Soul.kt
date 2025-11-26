@@ -6,12 +6,19 @@ import com.soulreturns.config.ConfigManager
 import com.soulreturns.features.DoubleHookResponse
 import com.soulreturns.util.MessageHandler
 import net.fabricmc.api.ClientModInitializer
+import net.fabricmc.loader.api.FabricLoader
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 object Soul : ClientModInitializer {
     private val logger = LoggerFactory.getLogger("soul")
     lateinit var configManager: ConfigManager
+
+    val version: String by lazy {
+        FabricLoader.getInstance().getModContainer("soul")
+            .map { it.metadata.version.friendlyString }
+            .orElse("Unknown")
+    }
 
 	override fun onInitializeClient() {
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
