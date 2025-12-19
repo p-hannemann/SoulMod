@@ -3,10 +3,10 @@
   "package": "com.soulreturns.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "ExampleMixin"
   ],
   "client": [
-    "render.InGameHudMixin"
+    "render.InGameHudMixin",
+    "render.SneakHeightMixin"
   ],
   "injectors": {
     "defaultRequire": 1

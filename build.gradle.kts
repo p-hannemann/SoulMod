@@ -25,6 +25,8 @@ repositories {
     strictMaven("https://www.cursemaven.com", "CurseForge", "curse.maven")
     strictMaven("https://api.modrinth.com/maven", "Modrinth", "maven.modrinth")
 
+    mavenCentral()
+    maven("https://jitpack.io")
     maven ("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
     maven("https://maven.notenoughupdates.org/releases/")
 }
@@ -49,6 +51,10 @@ dependencies {
 //    }
 
     modImplementation("net.fabricmc.fabric-api:fabric-api:${project.property("deps.fabric_api")}")
+
+    // MixinExtras
+    modImplementation("io.github.llamalad7:mixinextras-fabric:0.4.1")
+    include("io.github.llamalad7:mixinextras-fabric:0.4.1")
 
 	modImplementation("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
 

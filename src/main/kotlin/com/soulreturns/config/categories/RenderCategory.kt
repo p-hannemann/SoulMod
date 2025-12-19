@@ -9,5 +9,11 @@ class RenderCategory {
     @JvmField
     @ConfigOption(name = "Hide Held Tooltip", desc = "Hides the annoying tooltip above the hotbar when swapping items")
     @ConfigEditorBoolean
-    var hideHeldItemTooltip: Boolean = true;
+    var hideHeldItemTooltip: Boolean = false;
+
+    @Expose
+    @JvmField
+    @ConfigOption(name = "Old Sneak Height", desc = "Reverts sneak height")
+    @ConfigEditorBoolean
+    var oldSneakHeight: Boolean = false;
 }
