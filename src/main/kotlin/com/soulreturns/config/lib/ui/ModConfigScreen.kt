@@ -178,7 +178,7 @@ class ModConfigScreen<T : Any>(
         // Render tooltips last (on top of everything)
         renderTooltips(context, mouseX, mouseY)
         
-        super.render(context, mouseX, mouseY, delta)
+        // super.render(context, mouseX, mouseY, delta)
     }
     
     private fun renderTooltips(context: DrawContext, mouseX: Int, mouseY: Int) {

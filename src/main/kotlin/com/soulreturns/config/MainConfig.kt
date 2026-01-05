@@ -7,7 +7,15 @@ import com.soulreturns.config.categories.MiningCategory
 import com.soulreturns.config.categories.DebugCategory
 import com.soulreturns.config.lib.annotations.ConfigCategory
 
+const val CURRENT_CONFIG_VERSION: Int = 1
+
 class MainConfig {
+    /**
+     * Version of the config.json layout. This allows future code to detect
+     * outdated configs and run migrations when fields / structure change.
+     */
+    @JvmField
+    var configVersion: Int = CURRENT_CONFIG_VERSION
     @JvmField
     @ConfigCategory(name = "Render", description = "Render features")
     var renderCategory = RenderCategory()

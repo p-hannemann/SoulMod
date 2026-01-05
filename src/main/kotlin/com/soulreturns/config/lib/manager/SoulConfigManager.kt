@@ -1,6 +1,7 @@
 package com.soulreturns.config.lib.manager
 
 import com.google.gson.GsonBuilder
+import com.soulreturns.Soul
 import com.soulreturns.config.lib.model.ConfigStructure
 import com.soulreturns.config.lib.parser.ConfigParser
 import com.soulreturns.util.DebugLogger
@@ -34,21 +35,21 @@ class SoulConfigManager<T : Any>(
                 FileReader(configFile).use { reader ->
                     val loaded = gson.fromJson(reader, configClass)
                     if (loaded == null) {
-                        println("[Soul Config] WARNING: Loaded config was null, using defaults")
+                        Soul.getLogger()?.warn("WARNING: Loaded config was null, using defaults")
                         factory()
                     } else {
-                        println("[Soul Config] Successfully loaded config from ${configFile.path}")
+                        Soul.getLogger()?.info("Successfully loaded config from ${configFile.path}")
                         loaded
                     }
                 }
             } catch (e: Exception) {
-                println("[Soul Config] ERROR: Failed to load config from ${configFile.path}: ${e.message}")
+                Soul.getLogger()?.error("ERROR: Failed to load config from ${configFile.path}: ${e.message}")
                 e.printStackTrace()
                 factory()
             }
         } else {
             DebugLogger.logConfigChange("Creating new config file at ${configFile.path}")
-            println("[Soul Config] Config file does not exist, creating new at ${configFile.path}")
+            Soul.getLogger()?.info("Config file does not exist, creating new at ${configFile.path}")
             factory()
         }
         
@@ -72,7 +73,7 @@ class SoulConfigManager<T : Any>(
             }
             DebugLogger.logConfigChange("Config saved successfully")
         } catch (e: Exception) {
-            println("Failed to save config to ${configFile.path}: ${e.message}")
+            Soul.getLogger()?.error("Failed to save config to ${configFile.path}: ${e.message}")
         }
     }
     
@@ -88,7 +89,7 @@ class SoulConfigManager<T : Any>(
                 }
                 DebugLogger.logConfigChange("Config reloaded successfully")
             } catch (e: Exception) {
-                println("Failed to reload config from ${configFile.path}: ${e.message}")
+                Soul.getLogger()?.error("Failed to reload config from ${configFile.path}: ${e.message}")
             }
         }
     }
