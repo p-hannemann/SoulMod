@@ -12,7 +12,7 @@ class RenderCategory {
     var highlightSubCategory = HighlightSubCategory()
 
     @JvmField
-    @ConfigOption(name = "Tooltips", description = "Visual separator")
+    @ConfigOption(name = "Tooltips")
     @Divider(label = "Tooltips")
     var divider1: Boolean = false
     
@@ -27,7 +27,7 @@ class RenderCategory {
     var showSkyblockIdInTooltip: Boolean = false
     
     @JvmField
-    @ConfigOption(name = "Player Rendering", description = "Visual separator")
+    @ConfigOption(name = "Player Rendering")
     @Divider(label = "Player Rendering")
     var divider2: Boolean = false
 

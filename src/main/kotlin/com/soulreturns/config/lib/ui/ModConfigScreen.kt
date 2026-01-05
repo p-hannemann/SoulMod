@@ -16,16 +16,43 @@ import com.soulreturns.config.lib.ui.themes.ThemeManager
 /**
  * Modern configuration screen (80% size, centered, with blur)
  */
+
+data class ModConfigLayout(
+    val guiWidthFraction: Double = 0.8,
+    val guiHeightFraction: Double = 0.8,
+    val sidebarWidth: Int = 240,
+    val contentPadding: Int = 24,
+    val categorySpacing: Int = 6,
+    val widgetSpacing: Int = 6,
+    val outerMargin: Int = 10,
+    val titleBarHeight: Int = 50,
+    /**
+     * Vertical offset from the top of the GUI to the content/sidebar area
+     * (i.e., the area below the title bar).
+     */
+    val contentTopOffset: Int = 70,
+    val bottomMargin: Int = 10,
+    /**
+     * Extra padding between the top of the sidebar content area and the first category button.
+     */
+    val sidebarCategoryTopPadding: Int = 10,
+)
+
 class ModConfigScreen<T : Any>(
     private val configManager: SoulConfigManager<T>,
     private val screenTitle: String,
-    private val version: String
+    private val version: String,
+    /**
+     * Layout configuration for margins, paddings and sizing. Implementations can override this
+     * to customise the overall positioning without touching rendering logic.
+     */
+    private val layout: ModConfigLayout = ModConfigLayout()
 ) : Screen(Text.literal(screenTitle)) {
     
-    private val sidebarWidth = 240
-    private val contentPadding = 24
-    private val categorySpacing = 6
-    private val widgetSpacing = 6
+    private val sidebarWidth get() = layout.sidebarWidth
+    private val contentPadding get() = layout.contentPadding
+    private val categorySpacing get() = layout.categorySpacing
+    private val widgetSpacing get() = layout.widgetSpacing
     
     // GUI dimensions (80% of screen, centered)
     private var guiX = 0
@@ -67,9 +94,9 @@ class ModConfigScreen<T : Any>(
     }
     
     private fun updateDimensions() {
-        // Calculate 80% of screen size
-        guiWidth = (width * 0.8).toInt()
-        guiHeight = (height * 0.8).toInt()
+        // Calculate size based on layout fractions
+        guiWidth = (width * layout.guiWidthFraction).toInt()
+        guiHeight = (height * layout.guiHeightFraction).toInt()
         
         // Center the GUI
         guiX = (width - guiWidth) / 2
@@ -148,7 +175,7 @@ class ModConfigScreen<T : Any>(
     private fun renderTooltips(context: DrawContext, mouseX: Int, mouseY: Int) {
         // Find hovered widget and show its description as tooltip
         val category = configManager.structure.categories.getOrNull(selectedCategoryIndex) ?: return
-        val contentY = guiY + 70
+        val contentY = guiY + layout.contentTopOffset
         
         for (widget in widgets) {
             val displayX = widget.x + guiX
@@ -191,10 +218,10 @@ class ModConfigScreen<T : Any>(
     
     private fun renderTitleBar(context: DrawContext) {
         // Title bar background
-        val titleBarX = guiX + 10
-        val titleBarY = guiY + 10
-        val titleBarWidth = guiWidth - 20
-        val titleBarHeight = 50
+        val titleBarX = guiX + layout.outerMargin
+        val titleBarY = guiY + layout.outerMargin
+        val titleBarWidth = guiWidth - layout.outerMargin * 2
+        val titleBarHeight = layout.titleBarHeight
         RenderHelper.drawRect(context, titleBarX, titleBarY, titleBarWidth, titleBarHeight, theme.titleBarBackground)
         
         // Title text
@@ -205,7 +232,7 @@ class ModConfigScreen<T : Any>(
         
         // Close button
         val closeButtonSize = 30
-        val closeButtonX = titleBarX + titleBarWidth - closeButtonSize - 10
+        val closeButtonX = titleBarX + titleBarWidth - closeButtonSize - layout.outerMargin
         val closeButtonY = titleBarY + 10
         val isCloseHovered = RenderHelper.isMouseOver(
             client?.mouse?.x?.toInt() ?: 0,
@@ -217,31 +244,31 @@ class ModConfigScreen<T : Any>(
         RenderHelper.drawRect(context, closeButtonX, closeButtonY, closeButtonSize, closeButtonSize, closeButtonColor)
         
         // X icon
-        val xSize = 12
+        val xSize = 5
         val xX = closeButtonX + (closeButtonSize - xSize) / 2
         val xY = closeButtonY + (closeButtonSize - xSize) / 2
         context.drawText(textRenderer, "✕", xX, xY, theme.textPrimary, false)
     }
     
     private fun renderSidebar(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // Sidebar background
+        // Sidebar background (aligned with content area)
         val sidebarX = guiX
-        val sidebarY = guiY
-        val sidebarH = guiHeight
+        val sidebarY = guiY + layout.contentTopOffset
+        val sidebarH = guiHeight - layout.contentTopOffset - layout.bottomMargin
         context.fill(sidebarX, sidebarY, sidebarX + sidebarWidth, sidebarY + sidebarH, theme.sidebarBackground)
         
         // Enable scissor for sidebar
-        context.enableScissor(sidebarX, sidebarY + 70, sidebarX + sidebarWidth, sidebarY + sidebarH - 10)
+        context.enableScissor(sidebarX, sidebarY, sidebarX + sidebarWidth, sidebarY + sidebarH)
         
         // Categories
-        var currentY = sidebarY + 80 - sidebarScroll.toInt()
+        var currentY = sidebarY + layout.sidebarCategoryTopPadding - sidebarScroll.toInt()
         
         for ((index, category) in configManager.structure.categories.withIndex()) {
             val categoryHeight = 40
             val categoryY = currentY
             
             // Skip if off-screen
-            if (categoryY + categoryHeight < sidebarY + 70 || categoryY > sidebarY + sidebarH) {
+            if (categoryY + categoryHeight < sidebarY || categoryY > sidebarY + sidebarH) {
                 currentY += categoryHeight + categorySpacing
                 if (index == selectedCategoryIndex && category.subcategories.isNotEmpty()) {
                     currentY += (category.subcategories.size * 35)
@@ -280,7 +307,7 @@ class ModConfigScreen<T : Any>(
                     val subHeight = 32
                     val subY = currentY
                     
-                    if (subY + subHeight >= sidebarY + 70 && subY <= sidebarY + sidebarH) {
+                    if (subY + subHeight >= sidebarY && subY <= sidebarY + sidebarH) {
                         val isSubHovered = mouseX >= sidebarX + 20 && mouseX <= sidebarX + sidebarWidth - 10 &&
                                           mouseY >= subY && mouseY <= subY + subHeight
                         val isSubSelected = subIndex == selectedSubcategoryIndex
@@ -311,10 +338,10 @@ class ModConfigScreen<T : Any>(
     
     private fun renderContent(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         // Content area background
-        val contentX = guiX + sidebarWidth + 10
-        val contentY = guiY + 70
-        val contentWidth = guiWidth - sidebarWidth - 20
-        val contentHeight = guiHeight - 80
+        val contentX = guiX + sidebarWidth + layout.outerMargin
+        val contentY = guiY + layout.contentTopOffset
+        val contentWidth = guiWidth - sidebarWidth - layout.outerMargin * 2
+        val contentHeight = guiHeight - layout.contentTopOffset - layout.bottomMargin
         
         RenderHelper.drawRect(context, contentX, contentY, contentWidth, contentHeight, theme.contentBackground)
         
@@ -441,7 +468,7 @@ class ModConfigScreen<T : Any>(
                 categoryInstance
             }
             
-            val contentY = guiY + 70
+            val contentY = guiY + layout.contentTopOffset
             for (widget in widgets) {
                 // Calculate display position with scroll offset
                 val displayX = widget.x + guiX
@@ -477,9 +504,9 @@ class ModConfigScreen<T : Any>(
     
     private fun handleSidebarClick(mouseX: Int, mouseY: Int) {
         val sidebarX = guiX
-        val sidebarY = guiY
-        val sidebarH = guiHeight
-        var currentY = sidebarY + 80 - sidebarScroll.toInt()
+        val sidebarY = guiY + layout.contentTopOffset
+        val sidebarH = guiHeight - layout.contentTopOffset - layout.bottomMargin
+        var currentY = sidebarY + layout.sidebarCategoryTopPadding - sidebarScroll.toInt()
         
         for ((index, category) in configManager.structure.categories.withIndex()) {
             val categoryHeight = 40
