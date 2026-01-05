@@ -166,10 +166,10 @@ class ModConfigScreen<T : Any>(
         val sidebarX = guiX
         val sidebarY = guiY
         val sidebarH = guiHeight
-        RenderHelper.drawRoundedRect(context, sidebarX, sidebarY, sidebarWidth, sidebarH, 0f, theme.sidebarBackground)
+        context.fill(sidebarX, sidebarY, sidebarX + sidebarWidth, sidebarY + sidebarH, theme.sidebarBackground)
         
-        // Enable scissor for sidebar
-        context.enableScissor(sidebarX, sidebarY + 70, sidebarX + sidebarWidth, sidebarY + sidebarH)
+        // Enable scissor for sidebar (but leave some padding for rounded corners)
+        context.enableScissor(sidebarX, sidebarY + 70, sidebarX + sidebarWidth, sidebarY + sidebarH - 10)
         
         // Categories
         var currentY = sidebarY + 80 - sidebarScroll.toInt()
@@ -199,7 +199,13 @@ class ModConfigScreen<T : Any>(
                 else -> theme.categoryBackground
             }
             
-            RenderHelper.drawRoundedRect(context, sidebarX + 10, categoryY, sidebarWidth - 20, categoryHeight, 8f, bgColor)
+            // Always draw rounded rect, optionally with border
+            if (theme.useBorders && bgColor != theme.sidebarBackground) {
+                // Draw border first
+                RenderHelper.drawRoundedRect(context, sidebarX + 9, categoryY - 1, sidebarWidth - 18, categoryHeight + 2, theme.categoryCornerRadius, theme.categoryBorder)
+            }
+            // Draw button on top
+            RenderHelper.drawRoundedRect(context, sidebarX + 10, categoryY, sidebarWidth - 20, categoryHeight, theme.categoryCornerRadius, bgColor)
             
             // Category text
             context.drawText(textRenderer, category.name, sidebarX + 20, categoryY + 13, theme.textPrimary, false)
@@ -223,8 +229,14 @@ class ModConfigScreen<T : Any>(
                             else -> theme.subcategoryBackground
                         }
                         
-                        RenderHelper.drawRoundedRect(context, sidebarX + 20, subY, sidebarWidth - 30, subHeight, 6f, subBgColor)
-                        context.drawText(textRenderer, subcategory.name, sidebarX + 30, subY + 10, theme.textSecondary, false)
+                        // Always draw rounded rect, optionally with border
+                        if (theme.useBorders && subBgColor != theme.sidebarBackground) {
+                            // Draw border first
+                            RenderHelper.drawRoundedRect(context, sidebarX + 19, subY - 1, sidebarWidth - 28, subHeight + 2, theme.categoryCornerRadius, theme.categoryBorder)
+                        }
+                        // Draw button on top
+                        RenderHelper.drawRoundedRect(context, sidebarX + 20, subY, sidebarWidth - 30, subHeight, theme.categoryCornerRadius, subBgColor)
+                        context.drawText(textRenderer, subcategory.name, sidebarX + 30, subY + 10, theme.textPrimary, false)
                     }
                     
                     currentY += subHeight + 4
@@ -280,7 +292,23 @@ class ModConfigScreen<T : Any>(
                     categoryInstance
                 }
                 
-                widget.render(context, mouseX, mouseY, delta, instance)
+                // Render card background if theme uses card style
+                if (theme.useCardStyle) {
+                    val cardPadding = 12
+                    val cardX = displayX - cardPadding
+                    val cardY = displayY - cardPadding / 2
+                    val cardWidth = contentWidth - contentPadding * 2 + cardPadding * 2
+                    val cardHeight = widget.height + cardPadding
+                    
+                    if (theme.useBorders) {
+                        // Draw border first
+                        RenderHelper.drawRoundedRect(context, cardX - 1, cardY - 1, cardWidth + 2, cardHeight + 2, theme.cardCornerRadius, theme.optionCardBorder)
+                    }
+                    // Draw card on top
+                    RenderHelper.drawRoundedRect(context, cardX, cardY, cardWidth, cardHeight, theme.cardCornerRadius, theme.optionCardBackground)
+                }
+                
+                widget.render(context, mouseX, mouseY, delta, instance, theme)
                 
                 // Restore original position
                 widget.x = originalX

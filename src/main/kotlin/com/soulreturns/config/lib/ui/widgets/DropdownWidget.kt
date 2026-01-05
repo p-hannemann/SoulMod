@@ -2,6 +2,7 @@ package com.soulreturns.config.lib.ui.widgets
 
 import com.soulreturns.config.lib.model.OptionData
 import com.soulreturns.config.lib.ui.RenderHelper
+import com.soulreturns.config.lib.ui.themes.Theme
 import com.soulreturns.util.DebugLogger
 import net.minecraft.client.gui.DrawContext
 
@@ -19,12 +20,12 @@ class DropdownWidget(
     private val dropdownHeight = 24
     private val itemHeight = 20
     
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float, configInstance: Any) {
+    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float, configInstance: Any, theme: Theme) {
         val currentValue = getValue(configInstance) as? String ?: values.firstOrNull() ?: ""
         val textRenderer = net.minecraft.client.MinecraftClient.getInstance().textRenderer
         
         // Draw option name
-        context.drawText(textRenderer, option.name, x, y + 7, 0xFFFFFFFF.toInt(), false)
+        context.drawText(textRenderer, option.name, x, y + 7, theme.textPrimary, false)
         
         // Dropdown button
         val dropdownX = x + width - 200
@@ -34,17 +35,17 @@ class DropdownWidget(
         val isDropdownHovered = mouseX >= dropdownX && mouseX <= dropdownX + 200 &&
                                 mouseY >= dropdownY && mouseY <= dropdownY + dropdownHeight
         
-        val bgColor = if (isDropdownHovered) 0xFF3C3C3C.toInt() else 0xFF2C2C2C.toInt()
-        RenderHelper.drawRoundedRect(context, dropdownX, dropdownY, 200, dropdownHeight, 4f, bgColor)
+        val bgColor = if (isDropdownHovered) theme.widgetHover else theme.widgetBackground
+        RenderHelper.drawRoundedRect(context, dropdownX, dropdownY, 200, dropdownHeight, theme.widgetCornerRadius, bgColor)
         
         // Draw current value
-        context.drawText(textRenderer, currentValue, dropdownX + 8, dropdownY + 8, 0xFFFFFFFF.toInt(), false)
+        context.drawText(textRenderer, currentValue, dropdownX + 8, dropdownY + 8, theme.textPrimary, false)
         
         // Draw arrow
         val arrowX = dropdownX + 185
         val arrowY = dropdownY + 12
         val arrow = if (isExpanded) "▲" else "▼"
-        context.drawText(textRenderer, arrow, arrowX, arrowY, 0xFFCCCCCC.toInt(), false)
+        context.drawText(textRenderer, arrow, arrowX, arrowY, theme.textSecondary, false)
         
         // Draw dropdown menu if expanded
         if (isExpanded) {
@@ -52,7 +53,7 @@ class DropdownWidget(
             val menuHeight = values.size * itemHeight
             
             // Menu background
-            RenderHelper.drawRoundedRect(context, dropdownX, menuY, 200, menuHeight, 4f, 0xFF1C1C1C.toInt())
+            RenderHelper.drawRoundedRect(context, dropdownX, menuY, 200, menuHeight, theme.widgetCornerRadius, theme.sidebarBackground)
             
             // Menu items
             for ((index, value) in values.withIndex()) {
@@ -62,8 +63,8 @@ class DropdownWidget(
                 
                 val isSelected = value == currentValue
                 val itemBgColor = when {
-                    isSelected -> 0xFF4C9AFF.toInt()
-                    isItemHovered -> 0xFF3C3C3C.toInt()
+                    isSelected -> theme.widgetActive
+                    isItemHovered -> theme.widgetHover
                     else -> 0
                 }
                 
@@ -71,7 +72,7 @@ class DropdownWidget(
                     context.fill(dropdownX, itemY, dropdownX + 200, itemY + itemHeight, itemBgColor)
                 }
                 
-                context.drawText(textRenderer, value, dropdownX + 8, itemY + 6, 0xFFFFFFFF.toInt(), false)
+                context.drawText(textRenderer, value, dropdownX + 8, itemY + 6, theme.textPrimary, false)
             }
         }
     }

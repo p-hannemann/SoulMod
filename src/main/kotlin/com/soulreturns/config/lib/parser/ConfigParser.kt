@@ -111,6 +111,11 @@ object ConfigParser {
                 OptionType.Button(button.text)
             }
             
+            field.isAnnotationPresent(Divider::class.java) -> {
+                val divider = field.getAnnotation(Divider::class.java)
+                OptionType.Divider(divider.label)
+            }
+            
             else -> return null // No type annotation found
         }
         

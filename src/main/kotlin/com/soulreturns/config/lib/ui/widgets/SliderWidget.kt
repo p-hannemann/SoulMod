@@ -3,6 +3,7 @@ package com.soulreturns.config.lib.ui.widgets
 import com.soulreturns.config.lib.model.OptionData
 import com.soulreturns.config.lib.model.OptionType
 import com.soulreturns.config.lib.ui.RenderHelper
+import com.soulreturns.config.lib.ui.themes.Theme
 import com.soulreturns.util.DebugLogger
 import net.minecraft.client.gui.DrawContext
 import kotlin.math.roundToInt
@@ -20,7 +21,7 @@ class SliderWidget(
     private var isDragging = false
     private val sliderHeight = 20
     
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float, configInstance: Any) {
+    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float, configInstance: Any, theme: Theme) {
         val value = (getValue(configInstance) as? Number)?.toDouble() ?: sliderType.min
         val percentage = ((value - sliderType.min) / (sliderType.max - sliderType.min)).toFloat()
         
@@ -32,25 +33,25 @@ class SliderWidget(
         } else {
             String.format("%.2f", value)
         }
-        context.drawText(textRenderer, "${option.name}: $valueText", x, y, 0xFFFFFFFF.toInt(), false)
+        context.drawText(textRenderer, "${option.name}: $valueText", x, y, theme.textPrimary, false)
         
         // Draw slider track
         val sliderY = y + 20
-        val trackColor = if (isHovered || isDragging) 0xFF444444.toInt() else 0xFF333333.toInt()
-        RenderHelper.drawRoundedRect(context, x, sliderY, width, sliderHeight, sliderHeight / 2f, trackColor)
+        val trackColor = if (isHovered || isDragging) theme.widgetHover else theme.widgetBackground
+        RenderHelper.drawRoundedRect(context, x, sliderY, width, sliderHeight, theme.widgetCornerRadius, trackColor)
         
         // Draw filled portion
         val filledWidth = (width * percentage).toInt()
         if (filledWidth > 0) {
-            val fillColor = 0xFF4C9AFF.toInt()
-            RenderHelper.drawRoundedRect(context, x, sliderY, filledWidth, sliderHeight, sliderHeight / 2f, fillColor)
+            val fillColor = theme.widgetActive
+            RenderHelper.drawRoundedRect(context, x, sliderY, filledWidth, sliderHeight, theme.widgetCornerRadius, fillColor)
         }
         
         // Draw handle
         val handleSize = sliderHeight + 4
         val handleX = x + (width * percentage).toInt() - handleSize / 2
         val handleY = sliderY - 2
-        val handleColor = if (isDragging) 0xFFFFFFFF.toInt() else 0xFFE0E0E0.toInt()
+        val handleColor = if (isDragging) theme.widgetHover else theme.widgetBackground
         
         RenderHelper.drawRoundedRect(context, handleX, handleY, handleSize, handleSize, handleSize / 2f, handleColor)
     }

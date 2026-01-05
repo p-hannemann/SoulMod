@@ -3,6 +3,7 @@ package com.soulreturns.config.lib.ui.widgets
 import com.soulreturns.config.lib.model.OptionData
 import com.soulreturns.config.lib.model.OptionType
 import com.soulreturns.config.lib.ui.RenderHelper
+import com.soulreturns.config.lib.ui.themes.Theme
 import com.soulreturns.util.DebugLogger
 import net.minecraft.client.gui.DrawContext
 import org.lwjgl.glfw.GLFW
@@ -21,29 +22,29 @@ class TextInputWidget(
     private var cursorBlink = 0f
     private val inputHeight = 30
     
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float, configInstance: Any) {
+    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float, configInstance: Any, theme: Theme) {
         val value = (getValue(configInstance) as? String) ?: ""
         val textRenderer = net.minecraft.client.MinecraftClient.getInstance().textRenderer
         
         // Draw label
-        context.drawText(textRenderer, option.name, x, y, 0xFFFFFFFF.toInt(), false)
+        context.drawText(textRenderer, option.name, x, y, theme.textPrimary, false)
         
         // Draw input box
         val inputY = y + 18
-        val bgColor = if (isFocused) 0xFF2C2C2C.toInt() else 0xFF242424.toInt()
-        val borderColor = if (isFocused) 0xFF4C9AFF.toInt() else 0xFF3C3C3C.toInt()
+        val bgColor = if (isFocused) theme.widgetHover else theme.widgetBackground
+        val borderColor = if (isFocused) theme.widgetActive else theme.categoryBorder
         
-        RenderHelper.drawRoundedRect(context, x, inputY, width, inputHeight, 6f, bgColor)
+        RenderHelper.drawRoundedRect(context, x, inputY, width, inputHeight, theme.widgetCornerRadius, bgColor)
         
         // Draw border
-        RenderHelper.drawRoundedRect(context, x - 1, inputY - 1, width + 2, inputHeight + 2, 6f, borderColor)
-        RenderHelper.drawRoundedRect(context, x, inputY, width, inputHeight, 6f, bgColor)
+        RenderHelper.drawRoundedRect(context, x - 1, inputY - 1, width + 2, inputHeight + 2, theme.widgetCornerRadius, borderColor)
+        RenderHelper.drawRoundedRect(context, x, inputY, width, inputHeight, theme.widgetCornerRadius, bgColor)
         
         // Draw text
         val textX = x + 8
         val textY = inputY + (inputHeight - textRenderer.fontHeight) / 2
         val displayText = if (value.isEmpty() && !isFocused) textInputType.placeholder else value
-        val textColor = if (value.isEmpty() && !isFocused) 0xFF666666.toInt() else 0xFFFFFFFF.toInt()
+        val textColor = if (value.isEmpty() && !isFocused) theme.textDisabled else theme.textPrimary
         
         // Clip text rendering to input box
         context.enableScissor(x, inputY, x + width, inputY + inputHeight)
@@ -54,7 +55,7 @@ class TextInputWidget(
             cursorBlink += delta * 2f
             if (cursorBlink % 1f < 0.5f) {
                 val cursorX = textX + textRenderer.getWidth(value.substring(0, cursorPos.coerceIn(0, value.length)))
-                context.fill(cursorX, textY, cursorX + 1, textY + textRenderer.fontHeight, 0xFFFFFFFF.toInt())
+                context.fill(cursorX, textY, cursorX + 1, textY + textRenderer.fontHeight, theme.textPrimary)
             }
         }
         

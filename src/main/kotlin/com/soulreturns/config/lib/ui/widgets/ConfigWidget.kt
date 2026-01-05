@@ -1,6 +1,7 @@
 package com.soulreturns.config.lib.ui.widgets
 
 import com.soulreturns.config.lib.model.OptionData
+import com.soulreturns.config.lib.ui.themes.Theme
 import net.minecraft.client.gui.DrawContext
 
 /**
@@ -20,7 +21,7 @@ abstract class ConfigWidget(
     /**
      * Renders the widget
      */
-    abstract fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float, configInstance: Any)
+    abstract fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float, configInstance: Any, theme: Theme)
     
     /**
      * Handles mouse click events

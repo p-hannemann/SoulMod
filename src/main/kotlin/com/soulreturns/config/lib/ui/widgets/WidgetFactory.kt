@@ -20,6 +20,7 @@ object WidgetFactory {
             ) // Simplified for now
             is OptionType.Dropdown -> DropdownWidget(option, x, y, option.type.values)
             is OptionType.Button -> ToggleWidget(option, x, y) // Simplified for now
+            is OptionType.Divider -> DividerWidget(option, x, y, option.type)
         }
     }
 }

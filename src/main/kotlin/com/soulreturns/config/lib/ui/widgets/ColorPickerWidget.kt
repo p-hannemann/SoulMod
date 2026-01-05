@@ -3,6 +3,7 @@ package com.soulreturns.config.lib.ui.widgets
 import com.soulreturns.config.lib.model.OptionData
 import com.soulreturns.config.lib.model.OptionType
 import com.soulreturns.config.lib.ui.RenderHelper
+import com.soulreturns.config.lib.ui.themes.Theme
 import com.soulreturns.util.DebugLogger
 import net.minecraft.client.gui.DrawContext
 
@@ -19,12 +20,12 @@ class ColorPickerWidget(
     private var isPickerOpen = false
     private val previewSize = 30
     
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float, configInstance: Any) {
+    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float, configInstance: Any, theme: Theme) {
         val value = (getValue(configInstance) as? Int) ?: 0xFFFFFFFF.toInt()
         val textRenderer = net.minecraft.client.MinecraftClient.getInstance().textRenderer
         
         // Draw label
-        context.drawText(textRenderer, option.name, x, y, 0xFFFFFFFF.toInt(), false)
+        context.drawText(textRenderer, option.name, x, y, theme.textPrimary, false)
         
         // Draw color preview box
         val previewX = x + width - previewSize
@@ -40,17 +41,17 @@ class ColorPickerWidget(
         }
         
         // Draw color preview
-        RenderHelper.drawRoundedRect(context, previewX, previewY, previewSize, previewSize, 6f, value)
+        RenderHelper.drawRoundedRect(context, previewX, previewY, previewSize, previewSize, theme.widgetCornerRadius, value)
         
         // Draw border
-        val borderColor = if (isHovered) 0xFFFFFFFF.toInt() else 0xFF666666.toInt()
-        RenderHelper.drawRoundedRect(context, previewX - 1, previewY - 1, previewSize + 2, previewSize + 2, 6f, borderColor)
-        RenderHelper.drawRoundedRect(context, previewX, previewY, previewSize, previewSize, 6f, value)
+        val borderColor = if (isHovered) theme.widgetHover else theme.categoryBorder
+        RenderHelper.drawRoundedRect(context, previewX - 1, previewY - 1, previewSize + 2, previewSize + 2, theme.widgetCornerRadius, borderColor)
+        RenderHelper.drawRoundedRect(context, previewX, previewY, previewSize, previewSize, theme.widgetCornerRadius, value)
         
         // Draw hex value
         val hex = String.format("#%08X", value)
         val hexX = previewX - textRenderer.getWidth(hex) - 10
-        context.drawText(textRenderer, hex, hexX, y + (previewSize - textRenderer.fontHeight) / 2, 0xFFCCCCCC.toInt(), false)
+        context.drawText(textRenderer, hex, hexX, y + (previewSize - textRenderer.fontHeight) / 2, theme.textSecondary, false)
     }
     
     override fun mouseClicked(mouseX: Int, mouseY: Int, button: Int, configInstance: Any): Boolean {

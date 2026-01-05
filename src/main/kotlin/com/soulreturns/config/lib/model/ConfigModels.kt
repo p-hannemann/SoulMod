@@ -51,4 +51,5 @@ sealed class OptionType {
     data class ColorPicker(val allowAlpha: Boolean) : OptionType()
     data class Dropdown(val values: Array<String>) : OptionType()
     data class Button(val text: String) : OptionType()
+    data class Divider(val label: String) : OptionType()
 }

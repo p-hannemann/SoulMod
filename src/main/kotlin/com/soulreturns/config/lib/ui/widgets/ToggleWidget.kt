@@ -2,6 +2,7 @@ package com.soulreturns.config.lib.ui.widgets
 
 import com.soulreturns.config.lib.model.OptionData
 import com.soulreturns.config.lib.ui.RenderHelper
+import com.soulreturns.config.lib.ui.themes.Theme
 import com.soulreturns.util.DebugLogger
 import net.minecraft.client.gui.DrawContext
 
@@ -12,12 +13,12 @@ class ToggleWidget(
     option: OptionData,
     x: Int,
     y: Int
-) : ConfigWidget(option, x, y, 200, 30) {
+) : ConfigWidget(option, x, y, 200, 20) {
     
-    private val toggleWidth = 44
-    private val toggleHeight = 24
+    private val toggleWidth = 36
+    private val toggleHeight = 18
     
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float, configInstance: Any) {
+    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float, configInstance: Any, theme: Theme) {
         val value = getValue(configInstance) as? Boolean ?: false
         
         // Animate toggle state
@@ -27,36 +28,39 @@ class ToggleWidget(
         
         // Draw option name
         val textRenderer = net.minecraft.client.MinecraftClient.getInstance().textRenderer
-        context.drawText(textRenderer, option.name, x, y + 7, 0xFFFFFFFF.toInt(), false)
+        val textHeight = textRenderer.fontHeight
+        val textY = y + (height - textHeight) / 2
+        context.drawText(textRenderer, option.name, x, textY, theme.textPrimary, false)
         
-        // Draw toggle background
+        // Draw toggle background (aligned with text center)
         val toggleX = x + width - toggleWidth
         val toggleY = y + (height - toggleHeight) / 2
         
-        val bgColorOff = 0xFF3C3C3C.toInt()
-        val bgColorOn = 0xFF4C9AFF.toInt()
+        val bgColorOff = theme.widgetBackground
+        val bgColorOn = theme.widgetActive
         val bgColor = RenderHelper.lerpColor(bgColorOff, bgColorOn, animationProgress)
         
-        val bgColorHover = if (isHovered) {
+        val bgColorFinal = if (isHovered) {
             RenderHelper.lerpColor(bgColor, 0xFFFFFFFF.toInt(), 0.1f)
         } else {
             bgColor
         }
         
-        RenderHelper.drawRoundedRect(context, toggleX, toggleY, toggleWidth, toggleHeight, toggleHeight / 2f, bgColorHover)
+        RenderHelper.drawRoundedRect(context, toggleX, toggleY, toggleWidth, toggleHeight, (toggleHeight / 2).toFloat(), bgColorFinal)
         
-        // Draw toggle knob
-        val knobSize = toggleHeight - 4
-        val knobX = toggleX + 2 + ((toggleWidth - knobSize - 4) * animationProgress).toInt()
-        val knobY = toggleY + 2
+        // Draw toggle knob (circle)
+        val knobSize = toggleHeight - 6
+        val knobTravel = toggleWidth - knobSize - 6
+        val knobX = toggleX + 3 + (knobTravel * animationProgress).toInt()
+        val knobY = toggleY + 3
         val knobColor = 0xFFFFFFFF.toInt()
         
-        RenderHelper.drawRoundedRect(context, knobX, knobY, knobSize, knobSize, knobSize / 2f, knobColor)
+        RenderHelper.drawRoundedRect(context, knobX, knobY, knobSize, knobSize, (knobSize / 2).toFloat(), knobColor)
         
         // Draw description if hovered
         if (isHovered && option.description.isNotEmpty()) {
             val descY = y + height + 2
-            context.drawText(textRenderer, option.description, x, descY, 0xFF999999.toInt(), false)
+            context.drawText(textRenderer, option.description, x, descY, theme.textSecondary, false)
         }
     }
     
