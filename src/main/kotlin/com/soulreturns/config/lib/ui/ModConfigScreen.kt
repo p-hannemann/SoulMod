@@ -11,6 +11,7 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
 import org.lwjgl.glfw.GLFW
 import com.soulreturns.config.config
+import com.soulreturns.config.lib.ui.themes.ThemeManager
 
 /**
  * Modern configuration screen (80% size, centered, with blur)
@@ -40,6 +41,9 @@ class ModConfigScreen<T : Any>(
     private val scrollSpeed = 20.0
     
     private val widgets = mutableListOf<ConfigWidget>()
+    
+    // Get current theme
+    private val theme get() = ThemeManager.getCurrentTheme()
     
     init {
         rebuildWidgets()
@@ -104,13 +108,13 @@ class ModConfigScreen<T : Any>(
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         // Apply blur effect if supported
         if (client != null && client!!.world != null) {
-            context.fillGradient(0, 0, width, height, 0xC0101010.toInt(), 0xD0101010.toInt())
+            context.fillGradient(0, 0, width, height, theme.overlayColor, theme.overlayColor)
         } else {
             renderInGameBackground(context)
         }
         
         // Background for GUI area
-        RenderHelper.drawGradientRect(context, guiX, guiY, guiWidth, guiHeight, 0xFF0F0F0F.toInt(), 0xFF1A1A1A.toInt())
+        RenderHelper.drawGradientRect(context, guiX, guiY, guiWidth, guiHeight, theme.backgroundTop, theme.backgroundBottom)
         
         // Render sidebar
         renderSidebar(context, mouseX, mouseY, delta)
@@ -129,13 +133,13 @@ class ModConfigScreen<T : Any>(
         val titleBarX = guiX + 10
         val titleBarY = guiY + 10
         val titleBarWidth = guiWidth - 20
-        RenderHelper.drawRoundedRect(context, titleBarX, titleBarY, titleBarWidth, 50, 12f, 0xDD1C1C1C.toInt())
+        RenderHelper.drawRoundedRect(context, titleBarX, titleBarY, titleBarWidth, 50, 12f, theme.titleBarBackground)
         
         // Title text
         val titleText = "$title v$version"
         val titleX = titleBarX + 20
         val titleY = titleBarY + 15
-        context.drawText(textRenderer, titleText, titleX, titleY, 0xFFFFFFFF.toInt(), false)
+        context.drawText(textRenderer, titleText, titleX, titleY, theme.textPrimary, false)
         
         // Close button
         val closeButtonSize = 30
@@ -147,14 +151,14 @@ class ModConfigScreen<T : Any>(
             closeButtonX, closeButtonY, closeButtonSize, closeButtonSize
         )
         
-        val closeButtonColor = if (isCloseHovered) 0xFFFF4444.toInt() else 0xFF3C3C3C.toInt()
+        val closeButtonColor = if (isCloseHovered) theme.closeButtonHover else theme.closeButtonNormal
         RenderHelper.drawRoundedRect(context, closeButtonX, closeButtonY, closeButtonSize, closeButtonSize, 8f, closeButtonColor)
         
         // X icon
         val xSize = 12
         val xX = closeButtonX + (closeButtonSize - xSize) / 2
         val xY = closeButtonY + (closeButtonSize - xSize) / 2
-        context.drawText(textRenderer, "✕", xX, xY, 0xFFFFFFFF.toInt(), false)
+        context.drawText(textRenderer, "✕", xX, xY, theme.textPrimary, false)
     }
     
     private fun renderSidebar(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -162,7 +166,7 @@ class ModConfigScreen<T : Any>(
         val sidebarX = guiX
         val sidebarY = guiY
         val sidebarH = guiHeight
-        RenderHelper.drawRoundedRect(context, sidebarX, sidebarY, sidebarWidth, sidebarH, 0f, 0xFF151515.toInt())
+        RenderHelper.drawRoundedRect(context, sidebarX, sidebarY, sidebarWidth, sidebarH, 0f, theme.sidebarBackground)
         
         // Enable scissor for sidebar
         context.enableScissor(sidebarX, sidebarY + 70, sidebarX + sidebarWidth, sidebarY + sidebarH)
@@ -190,15 +194,15 @@ class ModConfigScreen<T : Any>(
             
             // Category button background
             val bgColor = when {
-                isSelected -> 0xFF2C5AA0.toInt()
-                isHovered -> 0xFF2C2C2C.toInt()
-                else -> 0xFF1F1F1F.toInt()
+                isSelected -> theme.categorySelected
+                isHovered -> theme.categoryHover
+                else -> theme.categoryBackground
             }
             
             RenderHelper.drawRoundedRect(context, sidebarX + 10, categoryY, sidebarWidth - 20, categoryHeight, 8f, bgColor)
             
             // Category text
-            context.drawText(textRenderer, category.name, sidebarX + 20, categoryY + 13, 0xFFFFFFFF.toInt(), false)
+            context.drawText(textRenderer, category.name, sidebarX + 20, categoryY + 13, theme.textPrimary, false)
             
             currentY += categoryHeight + categorySpacing
             
@@ -214,13 +218,13 @@ class ModConfigScreen<T : Any>(
                         val isSubSelected = subIndex == selectedSubcategoryIndex
                         
                         val subBgColor = when {
-                            isSubSelected -> 0xFF4C9AFF.toInt()
-                            isSubHovered -> 0xFF2A2A2A.toInt()
-                            else -> 0xFF242424.toInt()
+                            isSubSelected -> theme.subcategorySelected
+                            isSubHovered -> theme.subcategoryHover
+                            else -> theme.subcategoryBackground
                         }
                         
                         RenderHelper.drawRoundedRect(context, sidebarX + 20, subY, sidebarWidth - 30, subHeight, 6f, subBgColor)
-                        context.drawText(textRenderer, subcategory.name, sidebarX + 30, subY + 10, 0xFFCCCCCC.toInt(), false)
+                        context.drawText(textRenderer, subcategory.name, sidebarX + 30, subY + 10, theme.textSecondary, false)
                     }
                     
                     currentY += subHeight + 4
@@ -238,7 +242,7 @@ class ModConfigScreen<T : Any>(
         val contentWidth = guiWidth - sidebarWidth - 20
         val contentHeight = guiHeight - 80
         
-        RenderHelper.drawRoundedRect(context, contentX, contentY, contentWidth, contentHeight, 12f, 0xFF1A1A1A.toInt())
+        RenderHelper.drawRoundedRect(context, contentX, contentY, contentWidth, contentHeight, 12f, theme.contentBackground)
         
         // Enable scissor for scrolling
         context.enableScissor(contentX, contentY, contentX + contentWidth, contentY + contentHeight)
@@ -253,7 +257,7 @@ class ModConfigScreen<T : Any>(
                 val hintText = "← Select a subcategory to view options"
                 val hintX = contentX + contentPadding
                 val hintY = contentY + contentPadding
-                context.drawText(textRenderer, hintText, hintX, hintY, 0xFF888888.toInt(), false)
+                context.drawText(textRenderer, hintText, hintX, hintY, theme.textSecondary, false)
             }
             
             for (widget in widgets) {

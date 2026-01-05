@@ -49,6 +49,6 @@ sealed class OptionType {
     data class TextInput(val placeholder: String, val maxLength: Int) : OptionType()
     data class NumberInput(val min: Double, val max: Double, val decimals: Int) : OptionType()
     data class ColorPicker(val allowAlpha: Boolean) : OptionType()
-    data class Dropdown(val options: List<String>) : OptionType()
+    data class Dropdown(val values: Array<String>) : OptionType()
     data class Button(val text: String) : OptionType()
 }

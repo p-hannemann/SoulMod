@@ -54,7 +54,7 @@ annotation class ColorPicker(
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Dropdown(
-    val options: Array<String>
+    val values: Array<String>
 )
 
 /**

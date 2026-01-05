@@ -103,7 +103,7 @@ object ConfigParser {
             
             field.isAnnotationPresent(Dropdown::class.java) -> {
                 val dropdown = field.getAnnotation(Dropdown::class.java)
-                OptionType.Dropdown(dropdown.options.toList())
+                OptionType.Dropdown(dropdown.values)
             }
             
             field.isAnnotationPresent(Button::class.java) -> {

@@ -25,6 +25,10 @@ class MainConfig {
     var fixesCategory = FixesCategory()
 
     @JvmField
+    @ConfigCategory(name = "Config", description = "Configuration settings")
+    var configCategory = com.soulreturns.config.categories.ConfigCategory()
+
+    @JvmField
     @ConfigCategory(name = "Debug", description = "Debug settings")
     var debugCategory = DebugCategory()
 }

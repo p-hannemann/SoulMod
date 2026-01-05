@@ -18,7 +18,7 @@ object WidgetFactory {
                 option, x, y,
                 OptionType.TextInput("0", 64)
             ) // Simplified for now
-            is OptionType.Dropdown -> ToggleWidget(option, x, y) // Simplified for now
+            is OptionType.Dropdown -> DropdownWidget(option, x, y, option.type.values)
             is OptionType.Button -> ToggleWidget(option, x, y) // Simplified for now
         }
     }
