@@ -47,11 +47,15 @@ class SliderWidget(
             RenderHelper.drawRect(context, x, sliderY, filledWidth, sliderHeight, fillColor)
         }
         
-        // Draw handle
+        // Draw handle with clear visual states for hover/drag
         val handleSize = sliderHeight + 4
         val handleX = x + (width * percentage).toInt() - handleSize / 2
         val handleY = sliderY - 2
-        val handleColor = if (isDragging) theme.widgetHover else theme.widgetBackground
+        val handleColor = when {
+            isDragging -> theme.widgetActive   // brightest when dragging
+            isHovered -> theme.widgetHover     // highlight on hover
+            else -> theme.widgetBackground
+        }
         
         RenderHelper.drawRect(context, handleX, handleY, handleSize, handleSize, handleColor)
     }

@@ -184,15 +184,23 @@ class ModConfigScreen<T : Any>(
     private fun renderTooltips(context: DrawContext, mouseX: Int, mouseY: Int) {
         // Find hovered widget and show its description as tooltip
         val category = configManager.structure.categories.getOrNull(selectedCategoryIndex) ?: return
+        
+        val contentX = guiX + sidebarWidth + layout.outerMargin
         val contentY = guiY + layout.contentTopOffset
+        val contentWidth = guiWidth - sidebarWidth - layout.outerMargin * 2
+        val widgetDisplayX = contentX + contentPadding
+        val widgetDisplayWidth = contentWidth - contentPadding * 2
         
         for (widget in widgets) {
-            val displayX = widget.x + guiX
+            val isDivider = widget.option.type is com.soulreturns.config.lib.model.OptionType.Divider
+            val displayX = if (isDivider) widget.x + guiX else widgetDisplayX
             val displayY = widget.y - contentScroll.toInt() + contentY
+            val hitWidth = if (isDivider) widget.width else widgetDisplayWidth
+            val hitHeight = widget.height
             
-            // Check if widget is hovered
-            if (mouseX >= displayX && mouseX <= displayX + widget.width &&
-                mouseY >= displayY && mouseY <= displayY + widget.height &&
+            // Check if widget is hovered (entire card area for non-dividers)
+            if (mouseX >= displayX && mouseX <= displayX + hitWidth &&
+                mouseY >= displayY && mouseY <= displayY + hitHeight &&
                 widget.option.description.isNotEmpty()) {
                 
                 // Calculate tooltip position near cursor
@@ -535,6 +543,182 @@ class ModConfigScreen<T : Any>(
         /*return super.mouseClicked(mouseX, mouseY, button)
         *///?}
     }
+    
+    //? if >=1.21.10 {
+    override fun mouseDragged(click: net.minecraft.client.gui.Click, offsetX: Double, offsetY: Double): Boolean {
+        val mouseXInt = click.x.toInt()
+        val mouseYInt = click.y.toInt()
+
+        // Only handle dragging if mouse is within GUI bounds
+        if (mouseXInt < guiX || mouseXInt > guiX + guiWidth || mouseYInt < guiY || mouseYInt > guiY + guiHeight) {
+            return super.mouseDragged(click, offsetX, offsetY)
+        }
+
+        val category = configManager.structure.categories.getOrNull(selectedCategoryIndex)
+        if (category != null) {
+            val categoryInstance = getCategoryInstance(category)
+            val instance = if (selectedSubcategoryIndex >= 0) {
+                val subcategory = category.subcategories.getOrNull(selectedSubcategoryIndex)
+                if (subcategory != null) getSubcategoryInstance(categoryInstance, subcategory) else categoryInstance
+            } else {
+                categoryInstance
+            }
+
+            val contentY = guiY + layout.contentTopOffset
+            val contentX = guiX + sidebarWidth + layout.outerMargin
+            val contentWidth = guiWidth - sidebarWidth - layout.outerMargin * 2
+            val widgetDisplayX = contentX + contentPadding
+            val widgetDisplayWidth = contentWidth - contentPadding * 2
+
+            for (widget in widgets) {
+                val isDivider = widget.option.type is com.soulreturns.config.lib.model.OptionType.Divider
+
+                val displayX = if (isDivider) widget.x + guiX else widgetDisplayX
+                val displayY = widget.y - contentScroll.toInt() + contentY
+                val originalX = widget.x
+                val originalY = widget.y
+                val originalWidth = widget.width
+
+                widget.x = displayX
+                widget.y = displayY
+                if (!isDivider) {
+                    widget.width = widgetDisplayWidth
+                }
+
+                widget.updateHover(mouseXInt, mouseYInt)
+                // Use left button (0) for drag handling; widgets like SliderWidget
+                // only care that a drag is in progress, not which button.
+                val dragged = widget.mouseDragged(mouseXInt, mouseYInt, 0, offsetX, offsetY, instance)
+
+                widget.x = originalX
+                widget.y = originalY
+                widget.width = originalWidth
+
+                if (dragged) {
+                    return true
+                }
+            }
+        }
+
+        return super.mouseDragged(click, offsetX, offsetY)
+    }
+
+    override fun mouseReleased(click: net.minecraft.client.gui.Click): Boolean {
+        val mouseXInt = click.x.toInt()
+        val mouseYInt = click.y.toInt()
+
+        // Mouse buttons are always 0=left, 1=right, 2=middle in our widgets;
+        // derive a simple int from the Click button enum string.
+        val buttonStr = click.button().toString()
+        val button = when {
+            buttonStr.contains("LEFT", ignoreCase = true) -> 0
+            buttonStr.contains("RIGHT", ignoreCase = true) -> 1
+            buttonStr.contains("MIDDLE", ignoreCase = true) -> 2
+            else -> 0
+        }
+
+        val category = configManager.structure.categories.getOrNull(selectedCategoryIndex)
+        if (category != null) {
+            val categoryInstance = getCategoryInstance(category)
+            val instance = if (selectedSubcategoryIndex >= 0) {
+                val subcategory = category.subcategories.getOrNull(selectedSubcategoryIndex)
+                if (subcategory != null) getSubcategoryInstance(categoryInstance, subcategory) else categoryInstance
+            } else {
+                categoryInstance
+            }
+
+            val contentY = guiY + layout.contentTopOffset
+            val contentX = guiX + sidebarWidth + layout.outerMargin
+            val contentWidth = guiWidth - sidebarWidth - layout.outerMargin * 2
+            val widgetDisplayX = contentX + contentPadding
+            val widgetDisplayWidth = contentWidth - contentPadding * 2
+
+            for (widget in widgets) {
+                val isDivider = widget.option.type is com.soulreturns.config.lib.model.OptionType.Divider
+
+                val displayX = if (isDivider) widget.x + guiX else widgetDisplayX
+                val displayY = widget.y - contentScroll.toInt() + contentY
+                val originalX = widget.x
+                val originalY = widget.y
+                val originalWidth = widget.width
+
+                widget.x = displayX
+                widget.y = displayY
+                if (!isDivider) {
+                    widget.width = widgetDisplayWidth
+                }
+
+                widget.updateHover(mouseXInt, mouseYInt)
+                val released = widget.mouseReleased(mouseXInt, mouseYInt, button, instance)
+
+                widget.x = originalX
+                widget.y = originalY
+                widget.width = originalWidth
+
+                if (released) {
+                    return true
+                }
+            }
+        }
+
+        return super.mouseReleased(click)
+    }
+    //?} else {
+    /*override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
+        val mouseXInt = mouseX.toInt()
+        val mouseYInt = mouseY.toInt()
+
+        if (mouseXInt < guiX || mouseXInt > guiX + guiWidth || mouseYInt < guiY || mouseYInt > guiY + guiHeight) {
+            return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+        }
+
+        val category = configManager.structure.categories.getOrNull(selectedCategoryIndex)
+        if (category != null) {
+            val categoryInstance = getCategoryInstance(category)
+            val instance = if (selectedSubcategoryIndex >= 0) {
+                val subcategory = category.subcategories.getOrNull(selectedSubcategoryIndex)
+                if (subcategory != null) getSubcategoryInstance(categoryInstance, subcategory) else categoryInstance
+            } else {
+                categoryInstance
+            }
+
+            val contentY = guiY + layout.contentTopOffset
+            val contentX = guiX + sidebarWidth + layout.outerMargin
+            val contentWidth = guiWidth - sidebarWidth - layout.outerMargin * 2
+            val widgetDisplayX = contentX + contentPadding
+            val widgetDisplayWidth = contentWidth - contentPadding * 2
+
+            for (widget in widgets) {
+                val isDivider = widget.option.type is com.soulreturns.config.lib.model.OptionType.Divider
+
+                val displayX = if (isDivider) widget.x + guiX else widgetDisplayX
+                val displayY = widget.y - contentScroll.toInt() + contentY
+                val originalX = widget.x
+                val originalY = widget.y
+                val originalWidth = widget.width
+
+                widget.x = displayX
+                widget.y = displayY
+                if (!isDivider) {
+                    widget.width = widgetDisplayWidth
+                }
+
+                widget.updateHover(mouseXInt, mouseYInt)
+                val dragged = widget.mouseDragged(mouseXInt, mouseYInt, button, deltaX, deltaY, instance)
+
+                widget.x = originalX
+                widget.y = originalY
+                widget.width = originalWidth
+
+                if (dragged) {
+                    return true
+                }
+            }
+        }
+
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+    }*/
+    //?}
     
     private fun handleSidebarClick(mouseX: Int, mouseY: Int) {
         val sidebarX = guiX
