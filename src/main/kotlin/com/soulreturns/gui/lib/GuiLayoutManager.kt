@@ -238,6 +238,7 @@ class GuiRuntimeTypeAdapterFactory : com.google.gson.TypeAdapterFactory {
                 out.endObject()
             }
 
+            @Suppress("UNCHECKED_CAST")
             override fun read(`in`: com.google.gson.stream.JsonReader): T? {
                 val json = com.google.gson.JsonParser.parseReader(`in`).asJsonObject
                 val typeName = json.get("type")?.asString ?: return null
@@ -247,6 +248,8 @@ class GuiRuntimeTypeAdapterFactory : com.google.gson.TypeAdapterFactory {
                     "item_tracker" -> ItemTrackerElement::class.java
                     else -> return null
                 }
+                // The Gson call returns a concrete GuiElement subtype; we
+                // explicitly trust this mapping and suppress the generic cast.
                 return gson.fromJson(data, targetType) as T
             }
         }

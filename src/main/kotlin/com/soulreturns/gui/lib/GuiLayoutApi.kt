@@ -40,7 +40,9 @@ object GuiLayoutApi {
         for (element in current.elements) {
             if (element is TextBlockElement && element.id == id) {
                 existing = element
-            } else if (element != null) {
+            } else {
+                // All elements in the layout are non-null by construction; we
+                // simply keep everything else as-is.
                 others += element
             }
         }
