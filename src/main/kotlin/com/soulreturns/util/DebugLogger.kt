@@ -62,4 +62,16 @@ object DebugLogger {
             // Config not initialized yet, skip logging
         }
     }
+
+    fun logGuiLayout(message: String) {
+        try {
+            val config = Soul.configManager.config.instance
+            if (config.debugCategory.debugMode &&
+                config.debugCategory.loggingSubCategory.logGuiLayout) {
+                logger.info("[GuiLayout] $message")
+            }
+        } catch (e: Exception) {
+            // Config not initialized yet, skip logging
+        }
+    }
 }

@@ -3,14 +3,17 @@ package com.soulreturns
 import com.soulreturns.command.SoulCommand
 import com.soulreturns.config.ConfigManager
 import com.soulreturns.features.DoubleHookResponse
+import com.soulreturns.features.LegionCounter
 import com.soulreturns.features.itemhighlight.HighlightManager
 import com.soulreturns.features.itemhighlight.TooltipHandler
 import com.soulreturns.features.mining.dwarvenMines.DonExpresso
+import com.soulreturns.gui.lib.GuiLayoutManager
 import com.soulreturns.util.MessageHandler
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.loader.api.FabricLoader
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.File
 
 object Soul : ClientModInitializer {
     private val logger = LoggerFactory.getLogger("SoulMod")
@@ -40,8 +43,17 @@ object Soul : ClientModInitializer {
         // Register tooltip handler
         TooltipHandler.register()
 
+        // Configure GUI layout persistence location (under config/soul/gui_layout.json)
+        val configDir = FabricLoader.getInstance().configDir.toFile()
+        val guiLayoutFile = File(configDir, "soul/gui_layout.json")
+        GuiLayoutManager.configure(guiLayoutFile)
+
         registerCommands()
         registerFeatures()
+
+        // Load existing GUI layout, or persist the current defaults if none
+        // exist yet.
+        GuiLayoutManager.loadOrInitialize()
     }
 
     fun registerCommands() {
@@ -51,6 +63,7 @@ object Soul : ClientModInitializer {
     fun registerFeatures() {
         DoubleHookResponse.register()
         DonExpresso.register()
+        LegionCounter.register()
     }
 
     fun reloadFeatures() {

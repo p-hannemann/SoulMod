@@ -10,6 +10,11 @@ class LoggingSubCategory {
     var logConfigChanges: Boolean = false
 
     @JvmField
+    @ConfigOption(name = "Log GUI Layout", description = "Log GUI layout loads, saves, and element changes")
+    @Toggle
+    var logGuiLayout: Boolean = false
+
+    @JvmField
     @ConfigOption(name = "Log Widget Interactions", description = "Log widget clicks and interactions")
     @Toggle
     var logWidgetInteractions: Boolean = false

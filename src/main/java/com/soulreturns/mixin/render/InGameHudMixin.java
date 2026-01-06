@@ -1,5 +1,6 @@
 package com.soulreturns.mixin.render;
 
+import com.soulreturns.gui.SoulGuiHudAdapter;
 import com.soulreturns.util.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
@@ -29,6 +30,9 @@ public class InGameHudMixin {
             at = @At("TAIL")
     )
     public void onRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+        // Existing HUD alerts
         RenderUtils.INSTANCE.renderAlerts(context);
+        // GUI library-driven HUD elements (text blocks, trackers, etc.)
+        SoulGuiHudAdapter.INSTANCE.renderHud(context);
     }
 }
