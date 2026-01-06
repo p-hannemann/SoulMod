@@ -3,6 +3,8 @@ package com.soulreturns.config.lib.ui
 import com.soulreturns.config.lib.manager.SoulConfigManager
 import com.soulreturns.config.lib.model.CategoryData
 import com.soulreturns.config.lib.model.SubcategoryData
+import com.soulreturns.config.lib.ui.minigames.SnakeGame
+import com.soulreturns.config.lib.ui.minigames.SnakeGame.Direction
 import com.soulreturns.config.lib.ui.widgets.ConfigWidget
 import com.soulreturns.config.lib.ui.widgets.WidgetFactory
 import com.soulreturns.util.DebugLogger
@@ -53,6 +55,11 @@ class ModConfigScreen<T : Any>(
      */
     private val layout: ModConfigLayout = ModConfigLayout()
 ) : Screen(Text.literal(screenTitle)) {
+
+    private enum class ViewMode { CONFIG, MINIGAMES }
+
+    private var viewMode: ViewMode = ViewMode.CONFIG
+    private val snakeGame = SnakeGame()
     
     private val sidebarWidth get() = layout.sidebarWidth
     private val contentPadding get() = layout.contentPadding
@@ -166,17 +173,22 @@ class ModConfigScreen<T : Any>(
         // Background for GUI area
         RenderHelper.drawGradientRect(context, guiX, guiY, guiWidth, guiHeight, theme.backgroundTop, theme.backgroundBottom)
         
-        // Render sidebar
-        renderSidebar(context, mouseX, mouseY, delta)
+        if (viewMode == ViewMode.CONFIG) {
+            // Render sidebar and content area for config
+            renderSidebar(context, mouseX, mouseY, delta)
+            renderContent(context, mouseX, mouseY, delta)
+        } else {
+            // Render minigames content instead of config widgets
+            renderMinigames(context, mouseX, mouseY, delta)
+        }
         
-        // Render content area
-        renderContent(context, mouseX, mouseY, delta)
-        
-        // Render title bar
+        // Render title bar (including Minigames button)
         renderTitleBar(context)
         
-        // Render tooltips last (on top of everything)
-        renderTooltips(context, mouseX, mouseY)
+        // Render tooltips last (on top of everything) in config mode only
+        if (viewMode == ViewMode.CONFIG) {
+            renderTooltips(context, mouseX, mouseY)
+        }
         
         // super.render(context, mouseX, mouseY, delta)
     }
@@ -247,24 +259,51 @@ class ModConfigScreen<T : Any>(
         val titleY = titleBarY + 15
         context.drawText(textRenderer, titleText, titleX, titleY, theme.textPrimary, false)
         
-        // Close button
+        // Close and Minigames buttons
         val closeButtonSize = 30
         val closeButtonX = titleBarX + titleBarWidth - closeButtonSize - layout.outerMargin
         val closeButtonY = titleBarY + 10
+
+        val minigamesButtonSize = closeButtonSize
+        val minigamesButtonX = closeButtonX - minigamesButtonSize - 6
+        val minigamesButtonY = closeButtonY
+
+        val mouseX = client?.mouse?.x?.toInt() ?: 0
+        val mouseY = client?.mouse?.y?.toInt() ?: 0
+
         val isCloseHovered = RenderHelper.isMouseOver(
-            client?.mouse?.x?.toInt() ?: 0,
-            client?.mouse?.y?.toInt() ?: 0,
+            mouseX,
+            mouseY,
             closeButtonX, closeButtonY, closeButtonSize, closeButtonSize
+        )
+        val isMinigamesHovered = RenderHelper.isMouseOver(
+            mouseX,
+            mouseY,
+            minigamesButtonX, minigamesButtonY, minigamesButtonSize, minigamesButtonSize
         )
         
         val closeButtonColor = if (isCloseHovered) theme.closeButtonHover else theme.closeButtonNormal
         RenderHelper.drawRect(context, closeButtonX, closeButtonY, closeButtonSize, closeButtonSize, closeButtonColor)
+
+        // Minigames button uses widget colors and highlights when active
+        val baseGamesColor = when {
+            viewMode == ViewMode.MINIGAMES -> theme.widgetActive
+            isMinigamesHovered -> theme.widgetHover
+            else -> theme.widgetBackground
+        }
+        RenderHelper.drawRect(context, minigamesButtonX, minigamesButtonY, minigamesButtonSize, minigamesButtonSize, baseGamesColor)
         
         // X icon
         val xSize = 5
         val xX = closeButtonX + (closeButtonSize - xSize) / 2
         val xY = closeButtonY + (closeButtonSize - xSize) / 2
         context.drawText(textRenderer, "✕", xX, xY, theme.textPrimary, false)
+
+        // Minigames icon (simple controller glyph)
+        val gSize = 5
+        val gX = minigamesButtonX + (minigamesButtonSize - gSize) / 2
+        val gY = minigamesButtonY + (minigamesButtonSize - gSize) / 2
+        context.drawText(textRenderer, "🎮", gX, gY, theme.textPrimary, false)
     }
     
     private fun renderSidebar(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -443,8 +482,66 @@ class ModConfigScreen<T : Any>(
         
         context.disableScissor()
     }
-    
-    //? if >=1.21.10 {
+
+    private fun renderMinigames(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        val contentX = guiX + sidebarWidth + layout.outerMargin
+        val contentY = guiY + layout.contentTopOffset
+        val contentWidth = guiWidth - sidebarWidth - layout.outerMargin * 2
+        val contentHeight = guiHeight - layout.contentTopOffset - layout.bottomMargin
+
+        // Background for minigames area
+        RenderHelper.drawRect(context, contentX, contentY, contentWidth, contentHeight, theme.contentBackground)
+
+        val now = System.currentTimeMillis()
+        snakeGame.update(now)
+
+        val cols = snakeGame.columns
+        val rows = snakeGame.rows
+        if (cols <= 0 || rows <= 0) return
+
+        val cellSize = (minOf(contentWidth / cols, contentHeight / rows)).coerceAtLeast(4)
+        if (cellSize <= 0) return
+
+        val boardWidth = cols * cellSize
+        val boardHeight = rows * cellSize
+        val boardX = contentX + (contentWidth - boardWidth) / 2
+        val boardY = contentY + (contentHeight - boardHeight) / 2
+
+        // Board background card
+        if (theme.useCardStyle) {
+            RenderHelper.drawRect(context, boardX - 4, boardY - 4, boardWidth + 8, boardHeight + 8, theme.optionCardBackground)
+        }
+
+        // Draw grid contents
+        val head = snakeGame.segments.lastOrNull()
+        for (segment in snakeGame.segments) {
+            val segX = boardX + segment.x * cellSize
+            val segY = boardY + segment.y * cellSize
+            val isHead = head != null && segment == head
+            val color = if (isHead) theme.widgetActive else theme.widgetBackground
+            RenderHelper.drawRect(context, segX, segY, cellSize - 1, cellSize - 1, color)
+        }
+
+        val food = snakeGame.food
+        val foodX = boardX + food.x * cellSize
+        val foodY = boardY + food.y * cellSize
+        val foodColor = 0xFFFF5555.toInt()
+        RenderHelper.drawRect(context, foodX, foodY, cellSize - 1, cellSize - 1, foodColor)
+
+        // HUD text (score and instructions)
+        val hudX = contentX + contentPadding
+        val hudY = contentY + contentPadding
+        val scoreText = "Score: ${snakeGame.score}"
+        val infoText = if (snakeGame.isAlive) {
+            "Use WASD or arrow keys to move. Press R to restart."
+        } else {
+            "Game over! Press R to play again."
+        }
+        context.drawText(textRenderer, scoreText, hudX, hudY, theme.textPrimary, false)
+        context.drawText(textRenderer, infoText, hudX, hudY + textRenderer.fontHeight + 4, theme.textSecondary, false)
+    }
+
+        //? if >=1.21.10 {
     override fun mouseClicked(click: net.minecraft.client.gui.Click, doubled: Boolean): Boolean {
         val mouseXInt = click.x.toInt()
         val mouseYInt = click.y.toInt()
@@ -467,15 +564,40 @@ class ModConfigScreen<T : Any>(
             return true // Consume clicks outside GUI
         }
         
-        // Check close button
+        // Title bar geometry used for Minigames and close buttons
         val closeButtonSize = 30
         val titleBarX = guiX + 10
         val titleBarY = guiY + 10
         val titleBarWidth = guiWidth - 20
         val closeButtonX = titleBarX + titleBarWidth - closeButtonSize - 10
         val closeButtonY = titleBarY + 10
+        val minigamesButtonSize = closeButtonSize
+        val minigamesButtonX = closeButtonX - minigamesButtonSize - 6
+        val minigamesButtonY = closeButtonY
+
+        // Minigames button click toggles view mode
+        if (RenderHelper.isMouseOver(mouseXInt, mouseYInt, minigamesButtonX, minigamesButtonY, minigamesButtonSize, minigamesButtonSize)) {
+            if (viewMode == ViewMode.CONFIG) {
+                viewMode = ViewMode.MINIGAMES
+                snakeGame.reset()
+            } else {
+                viewMode = ViewMode.CONFIG
+                rebuildWidgets()
+                targetSidebarScroll = 0.0
+                targetContentScroll = 0.0
+            }
+            return true
+        }
+
+        // Close button
         if (RenderHelper.isMouseOver(mouseXInt, mouseYInt, closeButtonX, closeButtonY, closeButtonSize, closeButtonSize)) {
             close()
+            return true
+        }
+        
+        if (viewMode == ViewMode.MINIGAMES) {
+            // For now, clicks inside the minigame area are ignored; title bar buttons handle mode
+            // switching and closing.
             return true
         }
         
@@ -554,6 +676,11 @@ class ModConfigScreen<T : Any>(
             return super.mouseDragged(click, offsetX, offsetY)
         }
 
+        if (viewMode == ViewMode.MINIGAMES) {
+            // No draggable widgets in minigames mode.
+            return super.mouseDragged(click, offsetX, offsetY)
+        }
+
         val category = configManager.structure.categories.getOrNull(selectedCategoryIndex)
         if (category != null) {
             val categoryInstance = getCategoryInstance(category)
@@ -615,6 +742,11 @@ class ModConfigScreen<T : Any>(
             buttonStr.contains("RIGHT", ignoreCase = true) -> 1
             buttonStr.contains("MIDDLE", ignoreCase = true) -> 2
             else -> 0
+        }
+
+        if (viewMode == ViewMode.MINIGAMES) {
+            // No widget release handling in minigames mode.
+            return super.mouseReleased(click)
         }
 
         val category = configManager.structure.categories.getOrNull(selectedCategoryIndex)
@@ -774,6 +906,11 @@ class ModConfigScreen<T : Any>(
         if (mouseXInt < guiX || mouseXInt > guiX + guiWidth || mouseYInt < guiY || mouseYInt > guiY + guiHeight) {
             return false
         }
+
+        if (viewMode == ViewMode.MINIGAMES) {
+            // Ignore scroll input in minigames mode for now.
+            return false
+        }
         
         if (mouseXInt >= guiX && mouseXInt < guiX + sidebarWidth) {
             targetSidebarScroll = (targetSidebarScroll - verticalAmount * scrollSpeed).coerceAtLeast(0.0)
@@ -792,6 +929,17 @@ class ModConfigScreen<T : Any>(
     *///?}
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             close()
+            return true
+        }
+
+        if (viewMode == ViewMode.MINIGAMES) {
+            when (keyCode) {
+                GLFW.GLFW_KEY_W, GLFW.GLFW_KEY_UP -> snakeGame.changeDirection(Direction.UP)
+                GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_DOWN -> snakeGame.changeDirection(Direction.DOWN)
+                GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_LEFT -> snakeGame.changeDirection(Direction.LEFT)
+                GLFW.GLFW_KEY_D, GLFW.GLFW_KEY_RIGHT -> snakeGame.changeDirection(Direction.RIGHT)
+                GLFW.GLFW_KEY_R -> snakeGame.reset()
+            }
             return true
         }
         
@@ -826,6 +974,11 @@ class ModConfigScreen<T : Any>(
     //?} else {
     /*override fun charTyped(chr: Char, modifiers: Int): Boolean {
     *///?}
+        if (viewMode == ViewMode.MINIGAMES) {
+            // Minigames view does not use text input.
+            return false
+        }
+
         val category = configManager.structure.categories.getOrNull(selectedCategoryIndex)
         if (category != null) {
             val categoryInstance = getCategoryInstance(category)
