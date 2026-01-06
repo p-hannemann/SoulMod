@@ -4,6 +4,7 @@ import com.soulreturns.command.SoulCommand
 import com.soulreturns.config.ConfigManager
 import com.soulreturns.features.DoubleHookResponse
 import com.soulreturns.features.LegionCounter
+import com.soulreturns.features.BobbinTimeCounter
 import com.soulreturns.features.itemhighlight.HighlightManager
 import com.soulreturns.features.itemhighlight.TooltipHandler
 import com.soulreturns.features.mining.dwarvenMines.DonExpresso
@@ -64,6 +65,7 @@ object Soul : ClientModInitializer {
         DoubleHookResponse.register()
         DonExpresso.register()
         LegionCounter.register()
+        BobbinTimeCounter.register()
     }
 
     fun reloadFeatures() {
