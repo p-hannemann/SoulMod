@@ -24,6 +24,8 @@ object BobbinTimeCounter {
     private const val RADIUS_SQ = RADIUS * RADIUS
 
     private var alertTriggered = false
+    private const val ALERT_COOLDOWN_MS = 3000L
+    private var lastAlertTimeMs: Long = 0L
 
     fun register() {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
@@ -105,10 +107,13 @@ object BobbinTimeCounter {
             staticThreshold
         }
 
-        // Fire alert once when we reach the desired bobber count; reset once
-        // we drop below so it can trigger again on future cycles.
-        if (count >= threshold && !alertTriggered) {
+        // Fire alert once when we reach the desired bobber count, but do not
+        // spam: enforce a cooldown between alerts even if the threshold is
+        // crossed repeatedly due to recasts.
+        val now = System.currentTimeMillis()
+        if (count >= threshold && !alertTriggered && now - lastAlertTimeMs >= ALERT_COOLDOWN_MS) {
             alertTriggered = true
+            lastAlertTimeMs = now
             RenderUtils.showAlert(
                 text = "Bobbin Time Ready ($count bobbers)",
                 color = 0xFF00FFFF.toInt(),

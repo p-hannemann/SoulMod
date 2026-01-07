@@ -29,11 +29,11 @@ class MinigamesCategory {
         description = "Show the Mandelbrot set viewer in the config GUI"
     )
     @Toggle
-    var enableMandelbrot: Boolean = true
+    var enableMandelbrot: Boolean = false
 
     @JvmField
     @ConfigOption(
-        name = "Enable DOOM",
+        name = "Can it run DOOM?",
         description = "Show the DOOM minigame in the config GUI"
     )
     @Toggle

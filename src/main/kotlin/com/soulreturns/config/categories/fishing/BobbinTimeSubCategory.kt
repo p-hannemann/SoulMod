@@ -20,7 +20,7 @@ class BobbinTimeSubCategory {
         description = "Show an on-screen alert with sound when enough bobbers are nearby."
     )
     @Toggle
-    var enableBobbinTimeAlert: Boolean = true
+    var enableBobbinTimeAlert: Boolean = false
 
     @JvmField
     @ConfigOption(
@@ -33,7 +33,7 @@ class BobbinTimeSubCategory {
     @JvmField
     @ConfigOption(
         name = "Sync with party",
-        description = "If enabled, use total party size minus one as the alert threshold (capped at 5).",
+        description = "If enabled, use total party size minus one as the alert threshold (capped at 5).\nIf in no party it will use the configured alert bobber count.",
         dynamicNameKey = "bobbin_sync_party",
     )
     @Toggle
