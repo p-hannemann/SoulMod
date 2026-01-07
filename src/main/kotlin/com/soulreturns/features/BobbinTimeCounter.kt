@@ -66,12 +66,21 @@ object BobbinTimeCounter {
             return
         }
 
-        val filter = fishingConfig.alertItemNameFilter.trim()
-        if (filter.isNotEmpty()) {
+        val filters = fishingConfig.alertItemNameFilter
+            .split(',')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+
+        if (filters.isNotEmpty()) {
             val inventory = player.inventory
             val hasMatchingItem = (0 until inventory.size()).any { slot ->
                 val stack = inventory.getStack(slot)
-                !stack.isEmpty && stack.name.string.contains(filter, ignoreCase = true)
+                if (stack.isEmpty) return@any false
+
+                val name = stack.name.string
+                filters.any { filter ->
+                    name.contains(filter, ignoreCase = true)
+                }
             }
 
             if (!hasMatchingItem) {
