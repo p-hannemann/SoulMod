@@ -2,13 +2,14 @@ package com.soulreturns.config.categories.fishing
 
 import com.soulreturns.config.lib.annotations.ConfigOption
 import com.soulreturns.config.lib.annotations.SliderNumberInput
+import com.soulreturns.config.lib.annotations.TextInput
 import com.soulreturns.config.lib.annotations.Toggle
 
 class BobbinTimeSubCategory {
     @JvmField
     @ConfigOption(
         name = "Enable Bobbin Time Counter",
-        description = "Show nearby fishing bobbers and optional alert for the Bobbin Time enchant."
+        description = "Show a HUD element with the number of nearby fishing bobbers."
     )
     @Toggle
     var enableBobbinTimeCounter: Boolean = false
@@ -28,4 +29,12 @@ class BobbinTimeSubCategory {
     )
     @SliderNumberInput(min = 1.0, max = 5.0, step = 1.0, decimals = 0)
     var alertBobberCount: Int = 5
+
+    @JvmField
+    @ConfigOption(
+        name = "Alert Item Name Filter",
+        description = "Only send Bobbin Time alerts when you have an inventory item whose name contains this text (case-insensitive). Leave empty to always alert."
+    )
+    @TextInput(placeholder = "e.g. Spade", maxLength = 64)
+    var alertItemNameFilter: String = "Spade"
 }

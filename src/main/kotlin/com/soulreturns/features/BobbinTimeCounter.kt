@@ -1,10 +1,12 @@
 package com.soulreturns.features
 
+import com.soulreturns.config.categories.fishing.BobbinTimeSubCategory
 import com.soulreturns.config.config
 import com.soulreturns.gui.lib.GuiLayoutApi
 import com.soulreturns.util.RenderUtils
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.minecraft.client.MinecraftClient
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.projectile.FishingBobberEntity
 
 /**
@@ -33,7 +35,6 @@ object BobbinTimeCounter {
         val world = client.world ?: return
 
         val fishingConfig = config.fishingCategory.bobbinTimeSubCategory
-        if (!fishingConfig.enableBobbinTimeCounter) return
 
         // Count fishing bobbers in range
         val count = world.entities
@@ -50,18 +51,33 @@ object BobbinTimeCounter {
             title = "Bobbin Time",
             lines = listOf("Nearby bobbers: $count"),
             color = 0xFF00FFFF.toInt(), // cyan-ish
+            enabled = fishingConfig.enableBobbinTimeCounter,
             defaultAnchorX = 0.02,
             defaultAnchorY = 0.35,
             defaultScale = 1.0f,
         )
 
-        handleAlert(count, fishingConfig)
+        handleAlert(player, count, fishingConfig)
     }
 
-    private fun handleAlert(count: Int, fishingConfig: com.soulreturns.config.categories.fishing.BobbinTimeSubCategory) {
+    private fun handleAlert(player: PlayerEntity, count: Int, fishingConfig: BobbinTimeSubCategory) {
         if (!fishingConfig.enableBobbinTimeAlert) {
             alertTriggered = false
             return
+        }
+
+        val filter = fishingConfig.alertItemNameFilter.trim()
+        if (filter.isNotEmpty()) {
+            val inventory = player.inventory
+            val hasMatchingItem = (0 until inventory.size()).any { slot ->
+                val stack = inventory.getStack(slot)
+                !stack.isEmpty && stack.name.string.contains(filter, ignoreCase = true)
+            }
+
+            if (!hasMatchingItem) {
+                alertTriggered = false
+                return
+            }
         }
 
         val threshold = fishingConfig.alertBobberCount.coerceAtLeast(1)
