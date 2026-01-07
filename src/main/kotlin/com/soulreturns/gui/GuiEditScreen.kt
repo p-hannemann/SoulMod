@@ -162,6 +162,12 @@ class GuiEditScreen : Screen(Text.literal("Edit GUI")) {
         val client = MinecraftClient.getInstance()
         val mouseXInt = click.x.toInt()
         val mouseYInt = click.y.toInt()
+    //?} else {
+    /*override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        val client = MinecraftClient.getInstance()
+        val mouseXInt = mouseX.toInt()
+        val mouseYInt = mouseY.toInt()
+    *///?}
 
         // First, check if the reset button was clicked; if so, clear the layout
         // back to defaults and skip element selection/dragging.
@@ -182,11 +188,19 @@ class GuiEditScreen : Screen(Text.literal("Edit GUI")) {
         return true
     }
 
+    //? if >=1.21.10 {
     override fun mouseDragged(click: net.minecraft.client.gui.Click, offsetX: Double, offsetY: Double): Boolean {
         val client = MinecraftClient.getInstance()
         val guiCtx = EditHitTestContext(client)
         val mouseXInt = click.x.toInt()
         val mouseYInt = click.y.toInt()
+    //?} else {
+    /*override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
+        val client = MinecraftClient.getInstance()
+        val guiCtx = EditHitTestContext(client)
+        val mouseXInt = mouseX.toInt()
+        val mouseYInt = mouseY.toInt()
+    *///?}
 
         // If a drag starts without a prior click being registered here, we
         // still want to begin dragging the element under the cursor.
@@ -201,9 +215,14 @@ class GuiEditScreen : Screen(Text.literal("Edit GUI")) {
             editState = GuiEditSession.updateDrag(editState, guiCtx, mouseXInt, mouseYInt)
             return true
         }
+        //? if >=1.21.10 {
         return super.mouseDragged(click, offsetX, offsetY)
+        //?} else {
+        /*return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+        *///?}
     }
 
+    //? if >=1.21.10 {
     override fun mouseReleased(click: net.minecraft.client.gui.Click): Boolean {
         if (editState.isDragging) {
             editState = GuiEditSession.endDrag(editState)
@@ -212,16 +231,11 @@ class GuiEditScreen : Screen(Text.literal("Edit GUI")) {
         return super.mouseReleased(click)
     }
     //?} else {
-    /*override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        // Legacy signature stub for older versions; not used on 1.21.10+
-        return super.mouseClicked(mouseX, mouseY, button)
-    }
-
-    override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
-    }
-
-    override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
+    /*override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (editState.isDragging) {
+            editState = GuiEditSession.endDrag(editState)
+            return true
+        }
         return super.mouseReleased(mouseX, mouseY, button)
     }*/
     //?}
