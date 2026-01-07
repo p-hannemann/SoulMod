@@ -3,6 +3,7 @@ package com.soulreturns.commands.subcommands
 import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
+import com.soulreturns.util.DebugLogger
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 
@@ -59,6 +60,7 @@ interface SoulSubcommand {
         executor: (CommandContext<FabricClientCommandSource>) -> Unit
     ): LiteralArgumentBuilder<FabricClientCommandSource> {
         return this.executes { context ->
+            DebugLogger.logCommandExecution(context.input)
             executor(context)
             1 // Success
         }
@@ -74,6 +76,7 @@ interface SoulSubcommand {
         return this.then(
             ClientCommandManager.argument(name, StringArgumentType.greedyString())
                 .executes { context ->
+                    DebugLogger.logCommandExecution(context.input)
                     val value = StringArgumentType.getString(context, name)
                     executor(context, value)
                     1

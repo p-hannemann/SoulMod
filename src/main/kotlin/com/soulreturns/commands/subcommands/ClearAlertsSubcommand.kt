@@ -1,6 +1,7 @@
 package com.soulreturns.commands.subcommands
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
+import com.soulreturns.util.DebugLogger
 import com.soulreturns.util.RenderUtils
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.client.MinecraftClient
@@ -12,7 +13,9 @@ object ClearAlertsSubcommand : SoulSubcommand {
         return literal("clearalerts") {
             runs { _ ->
                 RenderUtils.clearAlerts()
-                MinecraftClient.getInstance().player?.sendMessage(Text.literal("§aCleared all alerts!"), false)
+                val feedback = "§aCleared all alerts!"
+                MinecraftClient.getInstance().player?.sendMessage(Text.literal(feedback), false)
+                DebugLogger.logSentMessage(feedback)
             }
         }
     }

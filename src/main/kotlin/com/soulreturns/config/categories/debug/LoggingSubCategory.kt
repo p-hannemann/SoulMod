@@ -28,4 +28,12 @@ class LoggingSubCategory {
     @ConfigOption(name = "Log Feature Events", description = "Log feature-specific events")
     @Toggle
     var logFeatureEvents: Boolean = false
+
+    @JvmField
+    @ConfigOption(
+        name = "Log Commands and Messages",
+        description = "Log executed commands, player chat input, and chat/messages sent by the mod to the console"
+    )
+    @Toggle
+    var logCommandsAndMessages: Boolean = false
 }

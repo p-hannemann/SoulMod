@@ -2,6 +2,7 @@ package com.soulreturns.commands
 
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
+import com.soulreturns.util.DebugLogger
 import com.soulreturns.util.RenderUtils
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
@@ -22,31 +23,40 @@ object TestAlertCommand {
                 .then(
                     ClientCommandManager.argument("message", StringArgumentType.greedyString())
                         .executes { context ->
+                            DebugLogger.logCommandExecution(context.input)
                             val message = StringArgumentType.getString(context, "message")
                             RenderUtils.showAlert(message, 0xFFFF0000.toInt(), 2.0f, 5000) // Show for 5 seconds at 2x size
 
                             val player = MinecraftClient.getInstance().player
-                            player?.sendMessage(Text.literal("§aShowing alert: §r$message"), false)
+                            val feedback = "§aShowing alert: §r$message"
+                            player?.sendMessage(Text.literal(feedback), false)
+                            DebugLogger.logSentMessage(feedback)
                             1
                         }
                 )
-                .executes { _ ->
+                .executes { context ->
+                    DebugLogger.logCommandExecution(context.input)
                     // Default test message
                     RenderUtils.showAlert("Don Expresso is leaving in 1 minute!", 0xFFFF0000.toInt(), 2.0f, 5000)
 
                     val player = MinecraftClient.getInstance().player
-                    player?.sendMessage(Text.literal("§aShowing Don Expresso alert!"), false)
+                    val feedback = "§aShowing Don Expresso alert!"
+                    player?.sendMessage(Text.literal(feedback), false)
+                    DebugLogger.logSentMessage(feedback)
                     1
                 }
         )
 
         dispatcher.register(
             ClientCommandManager.literal("clearalerts")
-                .executes { _ ->
+                .executes { context ->
+                    DebugLogger.logCommandExecution(context.input)
                     RenderUtils.clearAlerts()
 
                     val player = MinecraftClient.getInstance().player
-                    player?.sendMessage(Text.literal("§aCleared all alerts!"), false)
+                    val feedback = "§aCleared all alerts!"
+                    player?.sendMessage(Text.literal(feedback), false)
+                    DebugLogger.logSentMessage(feedback)
                     1
                 }
         )

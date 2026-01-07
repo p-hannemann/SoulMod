@@ -7,6 +7,7 @@ import com.soulreturns.commands.subcommands.GuiSubcommand
 import com.soulreturns.commands.subcommands.TestAlertSubcommand
 import com.soulreturns.commands.subcommands.TestMessageSubcommand
 import com.soulreturns.config.lib.ui.ModConfigScreen
+import com.soulreturns.util.DebugLogger
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
@@ -19,6 +20,7 @@ object SoulCommand {
             dispatcher.register(
                 ClientCommandManager.literal("soul")
                     .executes { context ->
+                        DebugLogger.logCommandExecution(context.input)
                         execute(context)
                     }
                     .then(TestMessageSubcommand.register())
@@ -32,8 +34,11 @@ object SoulCommand {
             dispatcher.register(
                 ClientCommandManager.literal("test")
                     .executes { context ->
+                        DebugLogger.logCommandExecution(context.input)
                         val test = Soul.configManager.config.instance.renderCategory.hideHeldItemTooltip
-                        context.source.player.sendMessage(Text.literal("Setting: $test"), false)
+                        val message = "Setting: $test"
+                        context.source.player.sendMessage(Text.literal(message), false)
+                        DebugLogger.logSentMessage(message)
                         0
                     }
             )

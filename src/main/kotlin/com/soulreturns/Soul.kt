@@ -8,6 +8,8 @@ import com.soulreturns.features.BobbinTimeCounter
 import com.soulreturns.features.itemhighlight.HighlightManager
 import com.soulreturns.features.itemhighlight.TooltipHandler
 import com.soulreturns.features.mining.dwarvenMines.DonExpresso
+import com.soulreturns.features.party.PartyHudOverlay
+import com.soulreturns.features.party.PartyManager
 import com.soulreturns.gui.lib.GuiLayoutManager
 import com.soulreturns.util.MessageHandler
 import net.fabricmc.api.ClientModInitializer
@@ -66,6 +68,10 @@ object Soul : ClientModInitializer {
         DonExpresso.register()
         LegionCounter.register()
         BobbinTimeCounter.register()
+
+        // Party tracking and HUD overlay
+        PartyManager.register()
+        PartyHudOverlay.register()
     }
 
     fun reloadFeatures() {

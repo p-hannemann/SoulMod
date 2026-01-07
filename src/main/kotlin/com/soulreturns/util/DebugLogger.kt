@@ -74,4 +74,40 @@ object DebugLogger {
             // Config not initialized yet, skip logging
         }
     }
+
+    fun logCommandExecution(commandInput: String) {
+        try {
+            val config = Soul.configManager.config.instance
+            if (config.debugCategory.debugMode &&
+                config.debugCategory.loggingSubCategory.logCommandsAndMessages) {
+                logger.info("[Command] $commandInput")
+            }
+        } catch (e: Exception) {
+            // Config not initialized yet, skip logging
+        }
+    }
+
+    fun logSentMessage(message: String) {
+        try {
+            val config = Soul.configManager.config.instance
+            if (config.debugCategory.debugMode &&
+                config.debugCategory.loggingSubCategory.logCommandsAndMessages) {
+                logger.info("[SentMessage] $message")
+            }
+        } catch (e: Exception) {
+            // Config not initialized yet, skip logging
+        }
+    }
+
+    fun logChatInput(input: String) {
+        try {
+            val config = Soul.configManager.config.instance
+            if (config.debugCategory.debugMode &&
+                config.debugCategory.loggingSubCategory.logCommandsAndMessages) {
+                logger.info("[ChatInput] $input")
+            }
+        } catch (e: Exception) {
+            // Config not initialized yet, skip logging
+        }
+    }
 }

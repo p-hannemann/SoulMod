@@ -77,6 +77,9 @@ object TestMessageSubcommand : SoulSubcommand {
         val minecraft = MinecraftClient.getInstance()
         minecraft.inGameHud.chatHud.addMessage(Text.literal(formattedMessage))
 
+        // Also log the message through the debug logger if enabled
+        com.soulreturns.util.DebugLogger.logSentMessage(formattedMessage)
+
         // Process the message through MessageHandler to trigger handlers
         MessageHandler.simulateMessage(formattedMessage)
     }
