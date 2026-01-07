@@ -59,6 +59,11 @@ class DoomGame {
         var wallColor: Int = 0xFF666666.toInt(),
         var ceilingColor: Int = 0xFF101010.toInt(),
         var floorColor: Int = 0xFF303030.toInt(),
+        /**
+         * Approximate distance to the first wall hit along this column's ray.
+         * Used for simple enemy sprite occlusion against walls.
+         */
+        var depth: Float = Float.POSITIVE_INFINITY,
     )
 
     // --- Map, enemies and player state ----------------------------------------
@@ -249,11 +254,14 @@ class DoomGame {
             val rayDirX = dirX + planeX * cameraX
             val rayDirY = dirY + planeY * cameraX
 
-            val hit = traceRay(rayDirX, rayDirY)
+            val hit = traceRay(rayDirX, rayDirY, allowEnemyHit = false)
             val sample = columnBuffer[x]
 
+            // Default: no wall in this column.
+            sample.depth = Float.POSITIVE_INFINITY
+
             if (hit.kind == HitKind.NONE) {
-                // No wall/enemy: just fill with sky and floor gradient.
+                // No wall in this direction: just fill with sky and floor gradient.
                 sample.wallTopNorm = 0.5f
                 sample.wallBottomNorm = 0.5f
                 sample.wallColor = 0xFF000000.toInt()
@@ -263,8 +271,9 @@ class DoomGame {
             }
 
             val perpDist = hit.distance.coerceAtLeast(0.0001)
+            sample.depth = perpDist.toFloat()
 
-            // Projected wall/enemy height in normalized units: closer hits are taller.
+            // Projected wall height in normalized units: closer hits are taller.
             val inv = 1.0 / perpDist
             val wallHeightNorm = (inv * 1.2).coerceIn(0.1, 1.5)
             val center = 0.5
@@ -273,21 +282,14 @@ class DoomGame {
             if (top < 0f) top = 0f
             if (bottom > 1f) bottom = 1f
 
-            val baseColor = when (hit.kind) {
-                HitKind.WALL -> when (hit.wallType) {
-                    1 -> 0xFF606060.toInt()
-                    2 -> 0xFF8B3A3A.toInt() // reddish
-                    3 -> 0xFF3A8B8B.toInt() // teal
-                    4 -> 0xFF707020.toInt() // yellow-ish
-                    5 -> 0xFF5A2A8B.toInt() // purple
-                    6 -> 0xFF8B7A3A.toInt() // brown
-                    else -> 0xFF606060.toInt()
-                }
-                HitKind.ENEMY -> {
-                    val idx = hit.enemyIndex
-                    if (idx in enemies.indices) enemies[idx].color else 0xFFFF0000.toInt()
-                }
-                HitKind.NONE -> 0xFF606060.toInt()
+            val baseColor = when (hit.wallType) {
+                1 -> 0xFF606060.toInt()
+                2 -> 0xFF8B3A3A.toInt() // reddish
+                3 -> 0xFF3A8B8B.toInt() // teal
+                4 -> 0xFF707020.toInt() // yellow-ish
+                5 -> 0xFF5A2A8B.toInt() // purple
+                6 -> 0xFF8B7A3A.toInt() // brown
+                else -> 0xFF606060.toInt()
             }
 
             // Distance-based shading.
@@ -301,8 +303,8 @@ class DoomGame {
 
             sample.wallTopNorm = top
             sample.wallBottomNorm = bottom
-            sample.wallColor = if (flashActive && hit.kind == HitKind.WALL) {
-                // Emphasise muzzle flash on walls but leave enemies readable.
+            sample.wallColor = if (flashActive) {
+                // Emphasise muzzle flash on walls; enemy sprites are drawn separately.
                 brightenColor(shadedColor, 1.4)
             } else {
                 shadedColor
@@ -357,7 +359,7 @@ class DoomGame {
                 RenderHelper.drawRect(context, xStart, topY, widthPx, wallTopPx - topY, sample.ceilingColor)
             }
 
-            // Wall / enemy segment
+            // Wall segment
             if (wallBottomPx > wallTopPx) {
                 RenderHelper.drawRect(context, xStart, wallTopPx, widthPx, wallBottomPx - wallTopPx, sample.wallColor)
             }
@@ -367,6 +369,17 @@ class DoomGame {
                 RenderHelper.drawRect(context, xStart, wallBottomPx, widthPx, bottomY - wallBottomPx, sample.floorColor)
             }
         }
+
+        // Draw enemy billboards on top of the world.
+        drawEnemiesAsSprites(
+            context = context,
+            contentX = contentX,
+            contentY = contentY,
+            contentWidth = contentWidth,
+            contentHeight = contentHeight,
+            samples = samples,
+            columnPixelWidth = columnPixelWidth,
+        )
 
         // Simple crosshair at the center of the viewport for "gun" mode.
         val centerX = contentX + contentWidth / 2
@@ -508,6 +521,111 @@ class DoomGame {
         return true
     }
 
+    private fun drawEnemiesAsSprites(
+        context: DrawContext,
+        contentX: Int,
+        contentY: Int,
+        contentWidth: Int,
+        contentHeight: Int,
+        samples: Array<ColumnSample>,
+        columnPixelWidth: Float,
+    ) {
+        if (enemies.isEmpty()) return
+        if (contentWidth <= 0 || contentHeight <= 0) return
+
+        val fov = Math.toRadians(70.0)
+        val halfFov = fov / 2.0
+        val centerX = contentX + contentWidth / 2
+        val centerY = contentY + contentHeight / 2
+
+        for (enemy in enemies) {
+            if (!enemy.isAlive) continue
+
+            val dx = enemy.x - posX
+            val dy = enemy.y - posY
+            val distance = sqrt(dx * dx + dy * dy)
+            if (distance < 0.001) continue
+
+            val enemyAngle = kotlin.math.atan2(dy, dx)
+            var relAngle = enemyAngle - angle
+            while (relAngle > Math.PI) relAngle -= 2.0 * Math.PI
+            while (relAngle < -Math.PI) relAngle += 2.0 * Math.PI
+
+            if (kotlin.math.abs(relAngle) > halfFov + 0.1) continue
+
+            // Depth along view direction; used for simple occlusion against walls.
+            val depth = distance * cos(relAngle)
+            if (depth <= 0.2) continue
+
+            val screenX = centerX + ((relAngle / halfFov) * (contentWidth / 2.0)).toInt()
+
+            val sizeFactor = 0.8
+            val spriteHeight = (contentHeight / depth * sizeFactor).toInt().coerceAtLeast(10)
+            val spriteWidth = (spriteHeight * 0.6).toInt().coerceAtLeast(8)
+
+            var xStart = screenX - spriteWidth / 2
+            var xEnd = screenX + spriteWidth / 2
+            if (xEnd < contentX || xStart > contentX + contentWidth) continue
+            xStart = maxOf(xStart, contentX)
+            xEnd = minOf(xEnd, contentX + contentWidth)
+
+            val topY = centerY - spriteHeight / 2
+            val bottomY = centerY + spriteHeight / 2
+            val clampedTopY = maxOf(contentY, topY)
+            val clampedBottomY = minOf(contentY + contentHeight, bottomY)
+            if (clampedBottomY <= clampedTopY) continue
+
+            // Simple occlusion: if the center of the enemy is behind a wall, skip drawing.
+            val centerColumnIndex = ((screenX - contentX) / columnPixelWidth).toInt()
+            if (centerColumnIndex in samples.indices) {
+                val wallDepth = samples[centerColumnIndex].depth.toDouble()
+                if (wallDepth > 0.0 && wallDepth < depth) {
+                    continue
+                }
+            }
+
+            val spriteWidthPx = xEnd - xStart
+            if (spriteWidthPx <= 0) continue
+
+            val bodyColor = enemy.color
+            val darkColor = shadeColor(bodyColor, 0.6)
+            val outlineColor = 0xFF000000.toInt()
+
+            // Main torso.
+            val bodyHeight = (spriteHeight * 0.45).toInt().coerceAtLeast(6)
+            val bodyTop = clampedTopY + (clampedBottomY - clampedTopY) / 3
+            RenderHelper.drawRect(context, xStart, bodyTop, spriteWidthPx, bodyHeight, bodyColor)
+
+            // Head.
+            val headHeight = (spriteHeight * 0.18).toInt().coerceAtLeast(4)
+            val headWidth = (spriteWidthPx * 0.55).toInt().coerceAtLeast(4)
+            val headX = xStart + (spriteWidthPx - headWidth) / 2
+            val headY = bodyTop - headHeight - 2
+            RenderHelper.drawRect(context, headX, headY, headWidth, headHeight, bodyColor)
+
+            // Eyes.
+            val eyeSize = maxOf(1, headWidth / 6)
+            val eyeOffsetX = headWidth / 4
+            val eyeY = headY + headHeight / 3
+            val eyeColor = 0xFFFFFFFF.toInt()
+            RenderHelper.drawRect(context, headX + eyeOffsetX - eyeSize / 2, eyeY, eyeSize, eyeSize, eyeColor)
+            RenderHelper.drawRect(context, headX + headWidth - eyeOffsetX - eyeSize / 2, eyeY, eyeSize, eyeSize, eyeColor)
+
+            // Legs.
+            val legHeight = (spriteHeight * 0.25).toInt().coerceAtLeast(4)
+            val legWidth = (spriteWidthPx * 0.25).toInt().coerceAtLeast(3)
+            val legsTop = bodyTop + bodyHeight
+            val leftLegX = xStart + spriteWidthPx / 4 - legWidth / 2
+            val rightLegX = xStart + spriteWidthPx * 3 / 4 - legWidth / 2
+            RenderHelper.drawRect(context, leftLegX, legsTop, legWidth, legHeight, darkColor)
+            RenderHelper.drawRect(context, rightLegX, legsTop, legWidth, legHeight, darkColor)
+
+            // Subtle outline to help the enemy stand out from similarly colored walls.
+            RenderHelper.drawRect(context, xStart - 1, clampedTopY - 1, spriteWidthPx + 2, 1, outlineColor)
+            RenderHelper.drawRect(context, xStart - 1, clampedBottomY, spriteWidthPx + 2, 1, outlineColor)
+        }
+    }
+
     // --- Internal helpers -----------------------------------------------------
 
     private fun shoot(nowMillis: Long) {
@@ -517,14 +635,14 @@ class DoomGame {
         // the current forward vector.
         val dirX = cos(angle)
         val dirY = sin(angle)
-        val hit = traceRay(dirX, dirY)
+        val hit = traceRay(dirX, dirY, allowEnemyHit = true)
 
         if (hit.kind == HitKind.ENEMY && hit.enemyIndex in enemies.indices) {
             enemies[hit.enemyIndex].isAlive = false
         }
     }
 
-    private fun traceRay(rayDirX: Double, rayDirY: Double): RayHit {
+    private fun traceRay(rayDirX: Double, rayDirY: Double, allowEnemyHit: Boolean): RayHit {
         // DDA setup.
         var mapX = posX.toInt()
         var mapY = posY.toInt()
@@ -576,7 +694,7 @@ class DoomGame {
             }
 
             val enemyIdx = enemyAtCell(mapX, mapY)
-            if (enemyIdx != -1) {
+            if (allowEnemyHit && enemyIdx != -1) {
                 hitKind = HitKind.ENEMY
                 enemyIndex = enemyIdx
                 break
